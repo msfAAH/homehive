@@ -1,0 +1,12 @@
+node_modules/
+dist/
+*.db
+*.db-shm
+*.db-wal
+server/uploads/photos/*
+server/uploads/documents/*
+!server/uploads/photos/.gitkeep
+!server/uploads/documents/.gitkeep
+.env
+.DS_Store
+.claude/
