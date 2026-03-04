@@ -20,14 +20,8 @@ import extractRouter from './routes/extract.js';
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 
-// CORS setup
-const corsOptions = {
-  origin: process.env.FRONTEND_URL || true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
-app.use(cors(corsOptions));
+// CORS setup - allow all origins for now
+app.use(cors());
 app.use(express.json());
 
 // Serve uploaded files
