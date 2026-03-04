@@ -32,7 +32,7 @@ router.get('/:id', (req: AuthRequest, res) => {
       (SELECT COUNT(*) FROM projects WHERE home_id = h.id) AS project_count
     FROM homes h
     WHERE h.id = ? AND h.user_id = ?
-  `).get(req.params.id, req.userId);
+  `).get(req.params.id as string, req.userId);
 
   if (!home) {
     res.status(404).json({ error: 'Home not found' });
@@ -65,7 +65,7 @@ router.put('/:id', (req: AuthRequest, res) => {
   const db = getDb();
   const { name, address, year_built, year_bought, notes } = req.body;
 
-  const existing = db.prepare('SELECT * FROM homes WHERE id = ? AND user_id = ?').get(req.params.id, req.userId) as any;
+  const existing = db.prepare('SELECT * FROM homes WHERE id = ? AND user_id = ?').get(req.params.id as string, req.userId) as any;
   if (!existing) {
     res.status(404).json({ error: 'Home not found' });
     return;
@@ -81,7 +81,7 @@ router.put('/:id', (req: AuthRequest, res) => {
     year_built !== undefined ? year_built : existing.year_built,
     year_bought !== undefined ? year_bought : existing.year_bought,
     notes !== undefined ? notes : existing.notes,
-    req.params.id,
+    req.params.id as string,
   );
 
   const home = db.prepare(`
@@ -89,14 +89,14 @@ router.put('/:id', (req: AuthRequest, res) => {
       (SELECT COUNT(*) FROM rooms WHERE home_id = h.id) AS room_count,
       (SELECT COUNT(*) FROM projects WHERE home_id = h.id) AS project_count
     FROM homes h WHERE h.id = ?
-  `).get(req.params.id);
+  `).get(req.params.id as string);
   res.json(home);
 });
 
 // POST /:id/cover-photo - upload or replace cover photo
 router.post('/:id/cover-photo', upload.single('photo'), (req: AuthRequest, res) => {
   const db = getDb();
-  const existing = db.prepare('SELECT * FROM homes WHERE id = ? AND user_id = ?').get(req.params.id, req.userId) as any;
+  const existing = db.prepare('SELECT * FROM homes WHERE id = ? AND user_id = ?').get(req.params.id as string, req.userId) as any;
   if (!existing) {
     res.status(404).json({ error: 'Home not found' });
     return;
@@ -115,27 +115,27 @@ router.post('/:id/cover-photo', upload.single('photo'), (req: AuthRequest, res) 
   }
 
   db.prepare(`UPDATE homes SET cover_photo = ?, updated_at = datetime('now') WHERE id = ?`)
-    .run(file.filename, req.params.id);
+    .run(file.filename, req.params.id as string);
 
   const home = db.prepare(`
     SELECT h.*,
       (SELECT COUNT(*) FROM rooms WHERE home_id = h.id) AS room_count,
       (SELECT COUNT(*) FROM projects WHERE home_id = h.id) AS project_count
     FROM homes h WHERE h.id = ?
-  `).get(req.params.id);
+  `).get(req.params.id as string);
   res.json(home);
 });
 
 // DELETE /:id - delete home (cascades, must belong to user)
 router.delete('/:id', (req: AuthRequest, res) => {
   const db = getDb();
-  const existing = db.prepare('SELECT * FROM homes WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
+  const existing = db.prepare('SELECT * FROM homes WHERE id = ? AND user_id = ?').get(req.params.id as string, req.userId);
   if (!existing) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
 
-  db.prepare('DELETE FROM homes WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM homes WHERE id = ?').run(req.params.id as string);
   res.json({ message: 'Home deleted' });
 });
 

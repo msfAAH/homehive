@@ -36,7 +36,7 @@ function verifyLineItemOwnership(lineItemId: string, userId: number): any {
 
 // GET /project/:projectId - list line items for a project
 router.get('/project/:projectId', (req: AuthRequest, res) => {
-  if (!verifyProjectOwnership(req.params.projectId, req.userId!)) {
+  if (!verifyProjectOwnership(req.params.projectId as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
@@ -44,19 +44,19 @@ router.get('/project/:projectId', (req: AuthRequest, res) => {
   const db = getDb();
   const items = db.prepare(
     'SELECT * FROM line_items WHERE project_id = ? ORDER BY created_at ASC',
-  ).all(req.params.projectId);
+  ).all(req.params.projectId as string);
   res.json(items);
 });
 
 // POST /project/:projectId - create line item
 router.post('/project/:projectId', (req: AuthRequest, res) => {
-  if (!verifyProjectOwnership(req.params.projectId, req.userId!)) {
+  if (!verifyProjectOwnership(req.params.projectId as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
 
   const db = getDb();
-  const projectId = req.params.projectId;
+  const projectId = req.params.projectId as string;
   const { description, quantity, unit_cost, vendor, notes } = req.body;
 
   if (!description || !description.trim()) {
@@ -84,7 +84,7 @@ router.post('/project/:projectId', (req: AuthRequest, res) => {
 
 // PUT /:id - update line item
 router.put('/:id', (req: AuthRequest, res) => {
-  const existing = verifyLineItemOwnership(req.params.id, req.userId!) as any;
+  const existing = verifyLineItemOwnership(req.params.id as string, req.userId!) as any;
   if (!existing) {
     res.status(404).json({ error: 'Line item not found' });
     return;
@@ -102,25 +102,25 @@ router.put('/:id', (req: AuthRequest, res) => {
     unit_cost !== undefined ? unit_cost : existing.unit_cost,
     vendor !== undefined ? vendor : existing.vendor,
     notes !== undefined ? notes : existing.notes,
-    req.params.id,
+    req.params.id as string,
   );
 
   recalculateProjectCost(existing.project_id);
 
-  const item = db.prepare('SELECT * FROM line_items WHERE id = ?').get(req.params.id);
+  const item = db.prepare('SELECT * FROM line_items WHERE id = ?').get(req.params.id as string);
   res.json(item);
 });
 
 // DELETE /:id - delete line item
 router.delete('/:id', (req: AuthRequest, res) => {
-  const existing = verifyLineItemOwnership(req.params.id, req.userId!) as any;
+  const existing = verifyLineItemOwnership(req.params.id as string, req.userId!) as any;
   if (!existing) {
     res.status(404).json({ error: 'Line item not found' });
     return;
   }
 
   const db = getDb();
-  db.prepare('DELETE FROM line_items WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM line_items WHERE id = ?').run(req.params.id as string);
   recalculateProjectCost(existing.project_id);
 
   res.json({ message: 'Line item deleted' });

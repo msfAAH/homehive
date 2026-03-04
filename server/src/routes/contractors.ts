@@ -33,7 +33,7 @@ function verifyContractorOwnership(contractorId: string, userId: number): any {
 
 // GET /home/:homeId - list all contractors for a home (across all its projects)
 router.get('/home/:homeId', (req: AuthRequest, res) => {
-  if (!verifyHomeOwnership(req.params.homeId, req.userId!)) {
+  if (!verifyHomeOwnership(req.params.homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -47,13 +47,13 @@ router.get('/home/:homeId', (req: AuthRequest, res) => {
        WHERE p.home_id = ?
        ORDER BY p.name ASC, c.company_name ASC`
     )
-    .all(req.params.homeId);
+    .all(req.params.homeId as string);
   res.json(contractors);
 });
 
 // GET /project/:projectId - list contractors for a project
 router.get('/project/:projectId', (req: AuthRequest, res) => {
-  if (!verifyProjectOwnership(req.params.projectId, req.userId!)) {
+  if (!verifyProjectOwnership(req.params.projectId as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
@@ -61,13 +61,13 @@ router.get('/project/:projectId', (req: AuthRequest, res) => {
   const db = getDb();
   const contractors = db
     .prepare('SELECT * FROM contractors WHERE project_id = ? ORDER BY created_at ASC')
-    .all(req.params.projectId);
+    .all(req.params.projectId as string);
   res.json(contractors);
 });
 
 // POST /project/:projectId - add contractor
 router.post('/project/:projectId', (req: AuthRequest, res) => {
-  if (!verifyProjectOwnership(req.params.projectId, req.userId!)) {
+  if (!verifyProjectOwnership(req.params.projectId as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
@@ -86,7 +86,7 @@ router.post('/project/:projectId', (req: AuthRequest, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
-      req.params.projectId,
+      req.params.projectId as string,
       company_name.trim(),
       contractor_type?.trim() || null,
       contact_name?.trim() || null,
@@ -101,7 +101,7 @@ router.post('/project/:projectId', (req: AuthRequest, res) => {
 
 // PUT /:id - update contractor
 router.put('/:id', (req: AuthRequest, res) => {
-  const existing = verifyContractorOwnership(req.params.id, req.userId!) as any;
+  const existing = verifyContractorOwnership(req.params.id as string, req.userId!) as any;
   if (!existing) {
     res.status(404).json({ error: 'Contractor not found' });
     return;
@@ -122,22 +122,22 @@ router.put('/:id', (req: AuthRequest, res) => {
     phone !== undefined ? (phone?.trim() || null) : existing.phone,
     email !== undefined ? (email?.trim() || null) : existing.email,
     website !== undefined ? (website?.trim() || null) : existing.website,
-    req.params.id,
+    req.params.id as string,
   );
 
-  const contractor = db.prepare('SELECT * FROM contractors WHERE id = ?').get(req.params.id);
+  const contractor = db.prepare('SELECT * FROM contractors WHERE id = ?').get(req.params.id as string);
   res.json(contractor);
 });
 
 // DELETE /:id - delete contractor
 router.delete('/:id', (req: AuthRequest, res) => {
-  if (!verifyContractorOwnership(req.params.id, req.userId!)) {
+  if (!verifyContractorOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Contractor not found' });
     return;
   }
 
   const db = getDb();
-  db.prepare('DELETE FROM contractors WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM contractors WHERE id = ?').run(req.params.id as string);
   res.json({ message: 'Contractor deleted' });
 });
 

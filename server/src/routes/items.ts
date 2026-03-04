@@ -30,14 +30,14 @@ function verifyItemOwnership(itemId: string, userId: number): any {
 
 // GET /room/:roomId - list items for a room with their attachments
 router.get('/room/:roomId', (req: AuthRequest, res) => {
-  if (!verifyRoomOwnership(req.params.roomId, req.userId!)) {
+  if (!verifyRoomOwnership(req.params.roomId as string, req.userId!)) {
     res.status(404).json({ error: 'Room not found' });
     return;
   }
 
   const db = getDb();
-  const items = db.prepare('SELECT * FROM items WHERE room_id = ? ORDER BY name ASC').all(req.params.roomId) as any[];
-  const attachments = db.prepare('SELECT * FROM attachments WHERE item_id IN (SELECT id FROM items WHERE room_id = ?) ORDER BY created_at ASC').all(req.params.roomId) as any[];
+  const items = db.prepare('SELECT * FROM items WHERE room_id = ? ORDER BY name ASC').all(req.params.roomId as string) as any[];
+  const attachments = db.prepare('SELECT * FROM attachments WHERE item_id IN (SELECT id FROM items WHERE room_id = ?) ORDER BY created_at ASC').all(req.params.roomId as string) as any[];
 
   const result = items.map((item) => ({
     ...item,
@@ -48,7 +48,7 @@ router.get('/room/:roomId', (req: AuthRequest, res) => {
 
 // POST /room/:roomId - create item
 router.post('/room/:roomId', (req: AuthRequest, res) => {
-  if (!verifyRoomOwnership(req.params.roomId, req.userId!)) {
+  if (!verifyRoomOwnership(req.params.roomId as string, req.userId!)) {
     res.status(404).json({ error: 'Room not found' });
     return;
   }
@@ -65,7 +65,7 @@ router.post('/room/:roomId', (req: AuthRequest, res) => {
     INSERT INTO items (room_id, name, category, brand, model, serial_number, purchase_date, purchase_price, warranty_expiry, notes)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    req.params.roomId,
+    req.params.roomId as string,
     name.trim(),
     category || null,
     brand?.trim() || null,
@@ -83,7 +83,7 @@ router.post('/room/:roomId', (req: AuthRequest, res) => {
 
 // PUT /:id - update item
 router.put('/:id', (req: AuthRequest, res) => {
-  const existing = verifyItemOwnership(req.params.id, req.userId!) as any;
+  const existing = verifyItemOwnership(req.params.id as string, req.userId!) as any;
   if (!existing) {
     res.status(404).json({ error: 'Item not found' });
     return;
@@ -108,31 +108,31 @@ router.put('/:id', (req: AuthRequest, res) => {
     purchase_price !== undefined ? (purchase_price != null ? Number(purchase_price) : null) : existing.purchase_price,
     warranty_expiry !== undefined ? (warranty_expiry || null) : existing.warranty_expiry,
     notes !== undefined ? (notes?.trim() || null) : existing.notes,
-    req.params.id,
+    req.params.id as string,
   );
 
-  const item = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id) as any;
-  const attachments = db.prepare('SELECT * FROM attachments WHERE item_id = ? ORDER BY created_at ASC').all(req.params.id);
+  const item = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id as string) as any;
+  const attachments = db.prepare('SELECT * FROM attachments WHERE item_id = ? ORDER BY created_at ASC').all(req.params.id as string);
   res.json({ ...item, attachments });
 });
 
 // DELETE /:id - delete item and its attachment files
 router.delete('/:id', (req: AuthRequest, res) => {
-  if (!verifyItemOwnership(req.params.id, req.userId!)) {
+  if (!verifyItemOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Item not found' });
     return;
   }
 
   const db = getDb();
   // Delete attachment files from disk
-  const attachments = db.prepare('SELECT * FROM attachments WHERE item_id = ?').all(req.params.id) as any[];
+  const attachments = db.prepare('SELECT * FROM attachments WHERE item_id = ?').all(req.params.id as string) as any[];
   for (const att of attachments) {
     const subdir = att.file_type === 'photo' ? 'photos' : 'documents';
     const filePath = path.join(UPLOADS_BASE, subdir, att.stored_name);
     try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch { /* ignore */ }
   }
-  db.prepare('DELETE FROM attachments WHERE item_id = ?').run(req.params.id);
-  db.prepare('DELETE FROM items WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM attachments WHERE item_id = ?').run(req.params.id as string);
+  db.prepare('DELETE FROM items WHERE id = ?').run(req.params.id as string);
   res.json({ message: 'Item deleted' });
 });
 

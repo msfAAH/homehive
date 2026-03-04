@@ -111,14 +111,14 @@ function verifyProjectOwnership(projectId: string, userId: number): any {
 
 // POST /extract/item/:id
 router.post('/item/:id', async (req: AuthRequest, res) => {
-  const item = verifyItemOwnership(req.params.id, req.userId!);
+  const item = verifyItemOwnership(req.params.id as string, req.userId!);
   if (!item) {
     res.status(404).json({ error: 'Item not found' });
     return;
   }
 
   const db = getDb();
-  const attachments = db.prepare('SELECT * FROM attachments WHERE item_id = ?').all(req.params.id) as any[];
+  const attachments = db.prepare('SELECT * FROM attachments WHERE item_id = ?').all(req.params.id as string) as any[];
   if (attachments.length === 0) {
     res.status(400).json({ error: 'No attachments found for this item. Upload manuals, warranties, or photos first.' });
     return;
@@ -154,9 +154,9 @@ router.post('/item/:id', async (req: AuthRequest, res) => {
     const maintenanceInfo = maintenanceMatch ? maintenanceMatch[1].trim() : '';
 
     db.prepare('UPDATE items SET warranty_info = ?, maintenance_info = ?, updated_at = datetime(\'now\') WHERE id = ?')
-      .run(warrantyInfo, maintenanceInfo, req.params.id);
+      .run(warrantyInfo, maintenanceInfo, req.params.id as string);
 
-    const updated = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id);
+    const updated = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id as string);
     res.json(updated);
   } catch (err: any) {
     console.error('Extract error:', err);
@@ -166,14 +166,14 @@ router.post('/item/:id', async (req: AuthRequest, res) => {
 
 // POST /extract/project/:id
 router.post('/project/:id', async (req: AuthRequest, res) => {
-  const project = verifyProjectOwnership(req.params.id, req.userId!);
+  const project = verifyProjectOwnership(req.params.id as string, req.userId!);
   if (!project) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
 
   const db = getDb();
-  const attachments = db.prepare('SELECT * FROM attachments WHERE project_id = ?').all(req.params.id) as any[];
+  const attachments = db.prepare('SELECT * FROM attachments WHERE project_id = ?').all(req.params.id as string) as any[];
   if (attachments.length === 0) {
     res.status(400).json({ error: 'No attachments found for this project. Upload contracts, warranties, or photos first.' });
     return;
@@ -208,9 +208,9 @@ router.post('/project/:id', async (req: AuthRequest, res) => {
     const maintenanceInfo = maintenanceMatch ? maintenanceMatch[1].trim() : '';
 
     db.prepare('UPDATE projects SET warranty_info = ?, maintenance_info = ?, updated_at = datetime(\'now\') WHERE id = ?')
-      .run(warrantyInfo, maintenanceInfo, req.params.id);
+      .run(warrantyInfo, maintenanceInfo, req.params.id as string);
 
-    const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
+    const updated = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id as string);
     res.json(updated);
   } catch (err: any) {
     console.error('Extract error:', err);
@@ -220,27 +220,27 @@ router.post('/project/:id', async (req: AuthRequest, res) => {
 
 // DELETE /extract/item/:id - clear extracted info
 router.delete('/item/:id', (req: AuthRequest, res) => {
-  if (!verifyItemOwnership(req.params.id, req.userId!)) {
+  if (!verifyItemOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Item not found' });
     return;
   }
 
   const db = getDb();
   db.prepare('UPDATE items SET warranty_info = NULL, maintenance_info = NULL, updated_at = datetime(\'now\') WHERE id = ?')
-    .run(req.params.id);
+    .run(req.params.id as string);
   res.json({ message: 'Cleared' });
 });
 
 // DELETE /extract/project/:id - clear extracted info
 router.delete('/project/:id', (req: AuthRequest, res) => {
-  if (!verifyProjectOwnership(req.params.id, req.userId!)) {
+  if (!verifyProjectOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
 
   const db = getDb();
   db.prepare('UPDATE projects SET warranty_info = NULL, maintenance_info = NULL, updated_at = datetime(\'now\') WHERE id = ?')
-    .run(req.params.id);
+    .run(req.params.id as string);
   res.json({ message: 'Cleared' });
 });
 

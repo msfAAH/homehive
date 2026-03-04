@@ -23,7 +23,7 @@ function verifyRoomOwnership(roomId: string, userId: number): any {
 
 // GET /home/:homeId - list rooms for a home with project count
 router.get('/home/:homeId', (req: AuthRequest, res) => {
-  if (!verifyHomeOwnership(req.params.homeId, req.userId!)) {
+  if (!verifyHomeOwnership(req.params.homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -36,13 +36,13 @@ router.get('/home/:homeId', (req: AuthRequest, res) => {
     FROM rooms r
     WHERE r.home_id = ?
     ORDER BY r.name ASC
-  `).all(req.params.homeId);
+  `).all(req.params.homeId as string);
   res.json(rooms);
 });
 
 // GET /:id - get single room
 router.get('/:id', (req: AuthRequest, res) => {
-  const room = verifyRoomOwnership(req.params.id, req.userId!);
+  const room = verifyRoomOwnership(req.params.id as string, req.userId!);
   if (!room) {
     res.status(404).json({ error: 'Room not found' });
     return;
@@ -55,20 +55,20 @@ router.get('/:id', (req: AuthRequest, res) => {
       (SELECT COUNT(*) FROM items WHERE room_id = r.id) AS item_count
     FROM rooms r
     WHERE r.id = ?
-  `).get(req.params.id);
+  `).get(req.params.id as string);
   res.json(full);
 });
 
 // POST /home/:homeId - create room
 router.post('/home/:homeId', (req: AuthRequest, res) => {
-  if (!verifyHomeOwnership(req.params.homeId, req.userId!)) {
+  if (!verifyHomeOwnership(req.params.homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
 
   const db = getDb();
   const { name, icon, floor, notes } = req.body;
-  const homeId = req.params.homeId;
+  const homeId = req.params.homeId as string;
 
   if (!name || !name.trim()) {
     res.status(400).json({ error: 'Name is required' });
@@ -86,7 +86,7 @@ router.post('/home/:homeId', (req: AuthRequest, res) => {
 
 // PUT /:id - update room
 router.put('/:id', (req: AuthRequest, res) => {
-  const existing = verifyRoomOwnership(req.params.id, req.userId!) as any;
+  const existing = verifyRoomOwnership(req.params.id as string, req.userId!) as any;
   if (!existing) {
     res.status(404).json({ error: 'Room not found' });
     return;
@@ -103,22 +103,22 @@ router.put('/:id', (req: AuthRequest, res) => {
     icon !== undefined ? (icon || null) : existing.icon,
     floor !== undefined ? floor : existing.floor,
     notes !== undefined ? notes : existing.notes,
-    req.params.id,
+    req.params.id as string,
   );
 
-  const room = db.prepare('SELECT * FROM rooms WHERE id = ?').get(req.params.id);
+  const room = db.prepare('SELECT * FROM rooms WHERE id = ?').get(req.params.id as string);
   res.json(room);
 });
 
 // DELETE /:id - delete room
 router.delete('/:id', (req: AuthRequest, res) => {
-  if (!verifyRoomOwnership(req.params.id, req.userId!)) {
+  if (!verifyRoomOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Room not found' });
     return;
   }
 
   const db = getDb();
-  db.prepare('DELETE FROM rooms WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM rooms WHERE id = ?').run(req.params.id as string);
   res.json({ message: 'Room deleted' });
 });
 

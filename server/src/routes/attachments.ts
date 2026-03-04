@@ -172,7 +172,7 @@ router.post('/', (req: AuthRequest, res, next) => {
 
 // DELETE /:id - delete attachment and remove file from disk
 router.delete('/:id', (req: AuthRequest, res) => {
-  const attachment = verifyAttachmentOwnership(req.params.id, req.userId!);
+  const attachment = verifyAttachmentOwnership(req.params.id as string, req.userId!);
   if (!attachment) {
     res.status(404).json({ error: 'Attachment not found' });
     return;
@@ -192,7 +192,7 @@ router.delete('/:id', (req: AuthRequest, res) => {
   }
 
   const db = getDb();
-  db.prepare('DELETE FROM attachments WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM attachments WHERE id = ?').run(req.params.id as string);
   res.json({ message: 'Attachment deleted' });
 });
 
