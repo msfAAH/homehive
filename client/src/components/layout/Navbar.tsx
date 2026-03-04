@@ -1,9 +1,16 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const isHome = location.pathname === '/';
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <nav className="fixed top-0 right-0 left-0 z-50 flex min-h-[56px] items-center bg-primary px-4 text-white shadow-md">
@@ -33,6 +40,34 @@ export default function Navbar() {
             HomeHive
           </Link>
         </div>
+
+        {user && (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {user.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.first_name}
+                  className="h-7 w-7 rounded-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-dark text-xs font-bold">
+                  {(user.first_name?.[0] || user.email[0]).toUpperCase()}
+                </div>
+              )}
+              <span className="hidden text-sm font-medium sm:inline">
+                {user.first_name || user.email.split('@')[0]}
+              </span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="rounded-lg px-2.5 py-1 text-xs font-medium hover:bg-primary-dark transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   );

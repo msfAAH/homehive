@@ -1,10 +1,32 @@
 import { Router } from 'express';
 import { getDb } from '../db/connection.js';
+import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
+// Helper: verify home belongs to user
+function verifyHomeOwnership(homeId: string | number, userId: number): boolean {
+  const db = getDb();
+  return !!db.prepare('SELECT id FROM homes WHERE id = ? AND user_id = ?').get(homeId, userId);
+}
+
+// Helper: verify project belongs to user (through home)
+function verifyProjectOwnership(projectId: string | number, userId: number): any {
+  const db = getDb();
+  return db.prepare(`
+    SELECT p.* FROM projects p
+    JOIN homes h ON p.home_id = h.id
+    WHERE p.id = ? AND h.user_id = ?
+  `).get(projectId, userId);
+}
+
 // GET /home/:homeId - list projects for a home (with optional filters)
-router.get('/home/:homeId', (req, res) => {
+router.get('/home/:homeId', (req: AuthRequest, res) => {
+  if (!verifyHomeOwnership(req.params.homeId, req.userId!)) {
+    res.status(404).json({ error: 'Home not found' });
+    return;
+  }
+
   const db = getDb();
   const { roomId, categoryId, status } = req.query;
 
@@ -39,7 +61,12 @@ router.get('/home/:homeId', (req, res) => {
 });
 
 // GET /:id - get single project with line items and attachments
-router.get('/:id', (req, res) => {
+router.get('/:id', (req: AuthRequest, res) => {
+  if (!verifyProjectOwnership(req.params.id, req.userId!)) {
+    res.status(404).json({ error: 'Project not found' });
+    return;
+  }
+
   const db = getDb();
   const project = db.prepare(`
     SELECT p.*,
@@ -51,11 +78,6 @@ router.get('/:id', (req, res) => {
     WHERE p.id = ?
   `).get(req.params.id) as any;
 
-  if (!project) {
-    res.status(404).json({ error: 'Project not found' });
-    return;
-  }
-
   const lineItems = db.prepare('SELECT * FROM line_items WHERE project_id = ? ORDER BY created_at ASC').all(req.params.id);
   const attachments = db.prepare('SELECT * FROM attachments WHERE project_id = ? ORDER BY created_at DESC').all(req.params.id);
   const contractors = db.prepare('SELECT * FROM contractors WHERE project_id = ? ORDER BY created_at ASC').all(req.params.id);
@@ -64,19 +86,18 @@ router.get('/:id', (req, res) => {
 });
 
 // POST /home/:homeId - create project
-router.post('/home/:homeId', (req, res) => {
+router.post('/home/:homeId', (req: AuthRequest, res) => {
+  if (!verifyHomeOwnership(req.params.homeId, req.userId!)) {
+    res.status(404).json({ error: 'Home not found' });
+    return;
+  }
+
   const db = getDb();
   const homeId = req.params.homeId;
   const { name, description, room_id, category_id, status, year_created, estimated_cost, actual_cost } = req.body;
 
   if (!name || !name.trim()) {
     res.status(400).json({ error: 'Name is required' });
-    return;
-  }
-
-  const home = db.prepare('SELECT id FROM homes WHERE id = ?').get(homeId);
-  if (!home) {
-    res.status(404).json({ error: 'Home not found' });
     return;
   }
 
@@ -100,14 +121,14 @@ router.post('/home/:homeId', (req, res) => {
 });
 
 // PUT /:id - update project
-router.put('/:id', (req, res) => {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id) as any;
+router.put('/:id', (req: AuthRequest, res) => {
+  const existing = verifyProjectOwnership(req.params.id, req.userId!) as any;
   if (!existing) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
 
+  const db = getDb();
   const { name, description, room_id, category_id, status, year_created, estimated_cost, actual_cost } = req.body;
 
   db.prepare(`
@@ -133,14 +154,13 @@ router.put('/:id', (req, res) => {
 });
 
 // DELETE /:id - delete project
-router.delete('/:id', (req, res) => {
-  const db = getDb();
-  const existing = db.prepare('SELECT id FROM projects WHERE id = ?').get(req.params.id);
-  if (!existing) {
+router.delete('/:id', (req: AuthRequest, res) => {
+  if (!verifyProjectOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
 
+  const db = getDb();
   db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id);
   res.json({ message: 'Project deleted' });
 });

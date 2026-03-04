@@ -5,6 +5,8 @@ import path from 'path';
 import { initDb } from './db/connection.js';
 import { runSchema } from './db/schema.js';
 import { seed } from './db/seed.js';
+import { authMiddleware } from './middleware/auth.js';
+import authRouter from './routes/auth.js';
 import homesRouter from './routes/homes.js';
 import roomsRouter from './routes/rooms.js';
 import categoriesRouter from './routes/categories.js';
@@ -27,20 +29,22 @@ app.use(express.json());
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(import.meta.dirname, '../uploads')));
 
-// API routes
+// Public routes (no auth required)
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
+app.use('/api/auth', authRouter);
 
-app.use('/api/homes', homesRouter);
-app.use('/api/rooms', roomsRouter);
-app.use('/api/categories', categoriesRouter);
-app.use('/api/projects', projectsRouter);
-app.use('/api/line-items', lineItemsRouter);
-app.use('/api/attachments', attachmentsRouter);
-app.use('/api/contractors', contractorsRouter);
-app.use('/api/items', itemsRouter);
-app.use('/api/extract', extractRouter);
+// Protected routes (auth required)
+app.use('/api/homes', authMiddleware, homesRouter);
+app.use('/api/rooms', authMiddleware, roomsRouter);
+app.use('/api/categories', authMiddleware, categoriesRouter);
+app.use('/api/projects', authMiddleware, projectsRouter);
+app.use('/api/line-items', authMiddleware, lineItemsRouter);
+app.use('/api/attachments', authMiddleware, attachmentsRouter);
+app.use('/api/contractors', authMiddleware, contractorsRouter);
+app.use('/api/items', authMiddleware, itemsRouter);
+app.use('/api/extract', authMiddleware, extractRouter);
 
 // Initialize database and start server
 const db = initDb();

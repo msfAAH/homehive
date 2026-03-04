@@ -2,12 +2,39 @@ import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getDb } from '../db/connection.js';
+import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
+// Helper: verify room belongs to user (through home)
+function verifyRoomOwnership(roomId: string | number, userId: number): boolean {
+  const db = getDb();
+  return !!db.prepare(`
+    SELECT r.id FROM rooms r
+    JOIN homes h ON r.home_id = h.id
+    WHERE r.id = ? AND h.user_id = ?
+  `).get(roomId, userId);
+}
+
+// Helper: verify item belongs to user (through room -> home)
+function verifyItemOwnership(itemId: string | number, userId: number): any {
+  const db = getDb();
+  return db.prepare(`
+    SELECT i.* FROM items i
+    JOIN rooms r ON i.room_id = r.id
+    JOIN homes h ON r.home_id = h.id
+    WHERE i.id = ? AND h.user_id = ?
+  `).get(itemId, userId);
+}
+
 // GET /room/:roomId - list items for a room with their attachments
-router.get('/room/:roomId', (req, res) => {
+router.get('/room/:roomId', (req: AuthRequest, res) => {
+  if (!verifyRoomOwnership(req.params.roomId, req.userId!)) {
+    res.status(404).json({ error: 'Room not found' });
+    return;
+  }
+
   const db = getDb();
   const items = db.prepare('SELECT * FROM items WHERE room_id = ? ORDER BY name ASC').all(req.params.roomId) as any[];
   const attachments = db.prepare('SELECT * FROM attachments WHERE item_id IN (SELECT id FROM items WHERE room_id = ?) ORDER BY created_at ASC').all(req.params.roomId) as any[];
@@ -20,18 +47,17 @@ router.get('/room/:roomId', (req, res) => {
 });
 
 // POST /room/:roomId - create item
-router.post('/room/:roomId', (req, res) => {
+router.post('/room/:roomId', (req: AuthRequest, res) => {
+  if (!verifyRoomOwnership(req.params.roomId, req.userId!)) {
+    res.status(404).json({ error: 'Room not found' });
+    return;
+  }
+
   const db = getDb();
   const { name, category, brand, model, serial_number, purchase_date, purchase_price, warranty_expiry, notes } = req.body;
 
   if (!name || !name.trim()) {
     res.status(400).json({ error: 'Name is required' });
-    return;
-  }
-
-  const room = db.prepare('SELECT id FROM rooms WHERE id = ?').get(req.params.roomId);
-  if (!room) {
-    res.status(404).json({ error: 'Room not found' });
     return;
   }
 
@@ -56,14 +82,14 @@ router.post('/room/:roomId', (req, res) => {
 });
 
 // PUT /:id - update item
-router.put('/:id', (req, res) => {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id) as any;
+router.put('/:id', (req: AuthRequest, res) => {
+  const existing = verifyItemOwnership(req.params.id, req.userId!) as any;
   if (!existing) {
     res.status(404).json({ error: 'Item not found' });
     return;
   }
 
+  const db = getDb();
   const { name, category, brand, model, serial_number, purchase_date, purchase_price, warranty_expiry, notes } = req.body;
 
   db.prepare(`
@@ -91,14 +117,13 @@ router.put('/:id', (req, res) => {
 });
 
 // DELETE /:id - delete item and its attachment files
-router.delete('/:id', (req, res) => {
-  const db = getDb();
-  const existing = db.prepare('SELECT id FROM items WHERE id = ?').get(req.params.id);
-  if (!existing) {
+router.delete('/:id', (req: AuthRequest, res) => {
+  if (!verifyItemOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Item not found' });
     return;
   }
 
+  const db = getDb();
   // Delete attachment files from disk
   const attachments = db.prepare('SELECT * FROM attachments WHERE item_id = ?').all(req.params.id) as any[];
   for (const att of attachments) {

@@ -4,6 +4,7 @@ import path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import { PDFParse, VerbosityLevel } from 'pdf-parse';
 import { getDb } from '../db/connection.js';
+import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
@@ -87,15 +88,36 @@ Summarize any recommended maintenance tasks, intervals, or service requirements.
 
 Be concise and practical. Use bullet points where helpful.`;
 
-// POST /extract/item/:id
-router.post('/item/:id', async (req, res) => {
+// Helper: verify item belongs to user
+function verifyItemOwnership(itemId: string | number, userId: number): any {
   const db = getDb();
-  const item = db.prepare('SELECT * FROM items WHERE id = ?').get(req.params.id) as any;
+  return db.prepare(`
+    SELECT i.* FROM items i
+    JOIN rooms r ON i.room_id = r.id
+    JOIN homes h ON r.home_id = h.id
+    WHERE i.id = ? AND h.user_id = ?
+  `).get(itemId, userId);
+}
+
+// Helper: verify project belongs to user
+function verifyProjectOwnership(projectId: string | number, userId: number): any {
+  const db = getDb();
+  return db.prepare(`
+    SELECT p.* FROM projects p
+    JOIN homes h ON p.home_id = h.id
+    WHERE p.id = ? AND h.user_id = ?
+  `).get(projectId, userId);
+}
+
+// POST /extract/item/:id
+router.post('/item/:id', async (req: AuthRequest, res) => {
+  const item = verifyItemOwnership(req.params.id, req.userId!);
   if (!item) {
     res.status(404).json({ error: 'Item not found' });
     return;
   }
 
+  const db = getDb();
   const attachments = db.prepare('SELECT * FROM attachments WHERE item_id = ?').all(req.params.id) as any[];
   if (attachments.length === 0) {
     res.status(400).json({ error: 'No attachments found for this item. Upload manuals, warranties, or photos first.' });
@@ -143,14 +165,14 @@ router.post('/item/:id', async (req, res) => {
 });
 
 // POST /extract/project/:id
-router.post('/project/:id', async (req, res) => {
-  const db = getDb();
-  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id) as any;
+router.post('/project/:id', async (req: AuthRequest, res) => {
+  const project = verifyProjectOwnership(req.params.id, req.userId!);
   if (!project) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
 
+  const db = getDb();
   const attachments = db.prepare('SELECT * FROM attachments WHERE project_id = ?').all(req.params.id) as any[];
   if (attachments.length === 0) {
     res.status(400).json({ error: 'No attachments found for this project. Upload contracts, warranties, or photos first.' });
@@ -197,7 +219,12 @@ router.post('/project/:id', async (req, res) => {
 });
 
 // DELETE /extract/item/:id - clear extracted info
-router.delete('/item/:id', (req, res) => {
+router.delete('/item/:id', (req: AuthRequest, res) => {
+  if (!verifyItemOwnership(req.params.id, req.userId!)) {
+    res.status(404).json({ error: 'Item not found' });
+    return;
+  }
+
   const db = getDb();
   db.prepare('UPDATE items SET warranty_info = NULL, maintenance_info = NULL, updated_at = datetime(\'now\') WHERE id = ?')
     .run(req.params.id);
@@ -205,7 +232,12 @@ router.delete('/item/:id', (req, res) => {
 });
 
 // DELETE /extract/project/:id - clear extracted info
-router.delete('/project/:id', (req, res) => {
+router.delete('/project/:id', (req: AuthRequest, res) => {
+  if (!verifyProjectOwnership(req.params.id, req.userId!)) {
+    res.status(404).json({ error: 'Project not found' });
+    return;
+  }
+
   const db = getDb();
   db.prepare('UPDATE projects SET warranty_info = NULL, maintenance_info = NULL, updated_at = datetime(\'now\') WHERE id = ?')
     .run(req.params.id);

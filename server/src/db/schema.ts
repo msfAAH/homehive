@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import { migrate001 } from './migrations/001-add-users.js';
 
 export function runSchema(db: Database.Database): void {
   db.exec(`
@@ -147,4 +148,7 @@ export function runSchema(db: Database.Database): void {
   if (itemCols.length > 0 && !itemCols.some((c) => c.name === 'maintenance_info')) {
     db.exec(`ALTER TABLE items ADD COLUMN maintenance_info TEXT`);
   }
+
+  // Run user authentication migration
+  migrate001(db);
 }

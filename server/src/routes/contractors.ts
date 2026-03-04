@@ -1,10 +1,43 @@
 import { Router } from 'express';
 import { getDb } from '../db/connection.js';
+import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
+// Helper: verify home belongs to user
+function verifyHomeOwnership(homeId: string | number, userId: number): boolean {
+  const db = getDb();
+  return !!db.prepare('SELECT id FROM homes WHERE id = ? AND user_id = ?').get(homeId, userId);
+}
+
+// Helper: verify project belongs to user
+function verifyProjectOwnership(projectId: string | number, userId: number): boolean {
+  const db = getDb();
+  return !!db.prepare(`
+    SELECT p.id FROM projects p
+    JOIN homes h ON p.home_id = h.id
+    WHERE p.id = ? AND h.user_id = ?
+  `).get(projectId, userId);
+}
+
+// Helper: verify contractor belongs to user (through project -> home)
+function verifyContractorOwnership(contractorId: string | number, userId: number): any {
+  const db = getDb();
+  return db.prepare(`
+    SELECT c.* FROM contractors c
+    JOIN projects p ON c.project_id = p.id
+    JOIN homes h ON p.home_id = h.id
+    WHERE c.id = ? AND h.user_id = ?
+  `).get(contractorId, userId);
+}
+
 // GET /home/:homeId - list all contractors for a home (across all its projects)
-router.get('/home/:homeId', (req, res) => {
+router.get('/home/:homeId', (req: AuthRequest, res) => {
+  if (!verifyHomeOwnership(req.params.homeId, req.userId!)) {
+    res.status(404).json({ error: 'Home not found' });
+    return;
+  }
+
   const db = getDb();
   const contractors = db
     .prepare(
@@ -19,7 +52,12 @@ router.get('/home/:homeId', (req, res) => {
 });
 
 // GET /project/:projectId - list contractors for a project
-router.get('/project/:projectId', (req, res) => {
+router.get('/project/:projectId', (req: AuthRequest, res) => {
+  if (!verifyProjectOwnership(req.params.projectId, req.userId!)) {
+    res.status(404).json({ error: 'Project not found' });
+    return;
+  }
+
   const db = getDb();
   const contractors = db
     .prepare('SELECT * FROM contractors WHERE project_id = ? ORDER BY created_at ASC')
@@ -28,18 +66,17 @@ router.get('/project/:projectId', (req, res) => {
 });
 
 // POST /project/:projectId - add contractor
-router.post('/project/:projectId', (req, res) => {
+router.post('/project/:projectId', (req: AuthRequest, res) => {
+  if (!verifyProjectOwnership(req.params.projectId, req.userId!)) {
+    res.status(404).json({ error: 'Project not found' });
+    return;
+  }
+
   const db = getDb();
   const { company_name, contractor_type, contact_name, phone, email, website } = req.body;
 
   if (!company_name || !company_name.trim()) {
     res.status(400).json({ error: 'Company name is required' });
-    return;
-  }
-
-  const project = db.prepare('SELECT id FROM projects WHERE id = ?').get(req.params.projectId);
-  if (!project) {
-    res.status(404).json({ error: 'Project not found' });
     return;
   }
 
@@ -63,14 +100,14 @@ router.post('/project/:projectId', (req, res) => {
 });
 
 // PUT /:id - update contractor
-router.put('/:id', (req, res) => {
-  const db = getDb();
-  const existing = db.prepare('SELECT * FROM contractors WHERE id = ?').get(req.params.id) as any;
+router.put('/:id', (req: AuthRequest, res) => {
+  const existing = verifyContractorOwnership(req.params.id, req.userId!) as any;
   if (!existing) {
     res.status(404).json({ error: 'Contractor not found' });
     return;
   }
 
+  const db = getDb();
   const { company_name, contractor_type, contact_name, phone, email, website } = req.body;
 
   db.prepare(
@@ -93,14 +130,13 @@ router.put('/:id', (req, res) => {
 });
 
 // DELETE /:id - delete contractor
-router.delete('/:id', (req, res) => {
-  const db = getDb();
-  const existing = db.prepare('SELECT id FROM contractors WHERE id = ?').get(req.params.id);
-  if (!existing) {
+router.delete('/:id', (req: AuthRequest, res) => {
+  if (!verifyContractorOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Contractor not found' });
     return;
   }
 
+  const db = getDb();
   db.prepare('DELETE FROM contractors WHERE id = ?').run(req.params.id);
   res.json({ message: 'Contractor deleted' });
 });
