@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Modal from '../ui/Modal';
+import { uploadsUrl } from '../../api/client';
 import type { Attachment } from '../../types';
 
 interface AttachmentGridProps {
@@ -21,10 +22,10 @@ export default function AttachmentGrid({ attachments, onDelete }: AttachmentGrid
         {photos.map((att) => (
           <div key={att.id} className="group relative">
             <img
-              src={`/uploads/photos/${att.stored_name}`}
+              src={uploadsUrl(`photos/${att.stored_name}`)}
               alt={att.caption || att.file_name}
               className="aspect-square w-full rounded-lg object-cover cursor-pointer"
-              onClick={() => setPreviewSrc(`/uploads/photos/${att.stored_name}`)}
+              onClick={() => setPreviewSrc(uploadsUrl(`photos/${att.stored_name}`))}
             />
             <button
               onClick={() => onDelete(att.id)}
@@ -42,7 +43,7 @@ export default function AttachmentGrid({ attachments, onDelete }: AttachmentGrid
         {documents.map((att) => (
           <div key={att.id} className="group relative">
             <a
-              href={`/uploads/documents/${att.stored_name}`}
+              href={uploadsUrl(`documents/${att.stored_name}`)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex flex-col items-center justify-center aspect-square rounded-lg border border-border bg-surface p-3 hover:bg-surface-dark transition-colors"

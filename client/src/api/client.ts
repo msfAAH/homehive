@@ -1,4 +1,9 @@
-const BASE = '/api';
+const API_URL = import.meta.env.VITE_API_URL || '';
+const BASE = `${API_URL}/api`;
+
+export function uploadsUrl(path: string): string {
+  return `${API_URL}/uploads/${path}`;
+}
 
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`);

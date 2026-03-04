@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Modal from '../ui/Modal';
 import AttachmentUpload from '../attachments/AttachmentUpload';
+import { uploadsUrl } from '../../api/client';
 import type { Attachment } from '../../types';
 
 interface BeforeAfterSectionProps {
@@ -36,10 +37,10 @@ function PhotoColumn({
           {photos.map((att) => (
             <div key={att.id} className="group relative">
               <img
-                src={`/uploads/photos/${att.stored_name}`}
+                src={uploadsUrl(`photos/${att.stored_name}`)}
                 alt={att.caption || att.file_name}
                 className="aspect-square w-full rounded-lg object-cover cursor-pointer"
-                onClick={() => setPreviewSrc(`/uploads/photos/${att.stored_name}`)}
+                onClick={() => setPreviewSrc(uploadsUrl(`photos/${att.stored_name}`))}
               />
               <button
                 onClick={() => onDelete(att.id)}

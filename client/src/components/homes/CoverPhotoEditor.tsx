@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
 import Button from '../ui/Button';
+import { uploadsUrl } from '../../api/client';
 
 interface CoverPhotoEditorProps {
   currentPhoto: string | null;
@@ -58,7 +59,7 @@ export default function CoverPhotoEditor({ currentPhoto, onCropReady }: CoverPho
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const displayPhoto = preview ?? (currentPhoto ? `/uploads/photos/${currentPhoto}` : null);
+  const displayPhoto = preview ?? (currentPhoto ? uploadsUrl(`photos/${currentPhoto}`) : null);
 
   return (
     <div className="flex flex-col gap-2">

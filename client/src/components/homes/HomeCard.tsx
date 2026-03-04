@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import Card from '../ui/Card';
+import { uploadsUrl } from '../../api/client';
 import type { Home } from '../../types';
 
 interface HomeCardProps {
@@ -14,7 +15,7 @@ export default function HomeCard({ home }: HomeCardProps) {
       {home.cover_photo && (
         <div className="mb-3 -mx-4 -mt-4 h-36">
           <img
-            src={`/uploads/photos/${home.cover_photo}`}
+            src={uploadsUrl(`photos/${home.cover_photo}`)}
             alt={home.name}
             className="h-full w-full object-cover"
           />

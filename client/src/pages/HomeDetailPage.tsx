@@ -12,7 +12,7 @@ import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import AttachmentGrid from '../components/attachments/AttachmentGrid';
 import AttachmentUpload from '../components/attachments/AttachmentUpload';
-import { apiGet, apiPost, apiDelete } from '../api/client';
+import { apiGet, apiPost, apiDelete, uploadsUrl } from '../api/client';
 import type { Home, Room, Project, Category, Attachment, Contractor } from '../types';
 
 function formatCost(value: number): string {
@@ -228,7 +228,7 @@ export default function HomeDetailPage() {
         {home.cover_photo && (
           <div className="mb-4 h-48 w-full overflow-hidden rounded-xl">
             <img
-              src={`/uploads/photos/${home.cover_photo}`}
+              src={uploadsUrl(`photos/${home.cover_photo}`)}
               alt={home.name}
               className="h-full w-full object-cover"
             />

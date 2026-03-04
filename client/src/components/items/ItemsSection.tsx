@@ -3,7 +3,7 @@ import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import AttachmentUpload from '../attachments/AttachmentUpload';
 import WarrantyMaintenance from '../WarrantyMaintenance';
-import { apiPost, apiPut, apiDelete } from '../../api/client';
+import { apiPost, apiPut, apiDelete, uploadsUrl } from '../../api/client';
 import type { Item, Attachment } from '../../types';
 
 const CATEGORIES = ['Appliance', 'Tool', 'Electronics', 'Fixture', 'HVAC', 'Plumbing', 'Electrical', 'Other'];
@@ -126,10 +126,10 @@ function PhotoGrid({ attachments, onDelete }: { attachments: Attachment[]; onDel
         {photos.map((att) => (
           <div key={att.id} className="group relative">
             <img
-              src={`/uploads/photos/${att.stored_name}`}
+              src={uploadsUrl(`photos/${att.stored_name}`)}
               alt={att.file_name}
               className="aspect-square w-full rounded-lg object-cover cursor-pointer"
-              onClick={() => setPreviewSrc(`/uploads/photos/${att.stored_name}`)}
+              onClick={() => setPreviewSrc(uploadsUrl(`photos/${att.stored_name}`))}
             />
             <button
               onClick={() => onDelete(att.id)}
@@ -153,7 +153,7 @@ function DocList({ attachments, onDelete }: { attachments: Attachment[]; onDelet
       {docs.map((doc) => (
         <div key={doc.id} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
           <a
-            href={`/uploads/documents/${doc.stored_name}`}
+            href={uploadsUrl(`documents/${doc.stored_name}`)}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-primary hover:underline truncate"

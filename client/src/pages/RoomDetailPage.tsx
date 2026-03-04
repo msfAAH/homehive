@@ -6,7 +6,7 @@ import Modal from '../components/ui/Modal';
 import EmptyState from '../components/ui/EmptyState';
 import RoomForm from '../components/rooms/RoomForm';
 import ItemsSection from '../components/items/ItemsSection';
-import { apiGet, apiDelete, apiUpload } from '../api/client';
+import { apiGet, apiDelete, apiUpload, uploadsUrl } from '../api/client';
 import type { Room, Project, Attachment, Item } from '../types';
 
 function formatCost(value: number): string {
@@ -237,7 +237,7 @@ export default function RoomDetailPage() {
                   {photos.map((photo) => (
                     <div key={photo.id} className="group relative">
                       <img
-                        src={`/uploads/photos/${photo.stored_name}`}
+                        src={uploadsUrl(`photos/${photo.stored_name}`)}
                         alt={photo.caption || photo.file_name}
                         className="h-40 w-full rounded-lg object-cover border border-border"
                       />
@@ -268,7 +268,7 @@ export default function RoomDetailPage() {
                       className="flex items-center justify-between rounded-lg border border-border p-3"
                     >
                       <a
-                        href={`/uploads/documents/${doc.stored_name}`}
+                        href={uploadsUrl(`documents/${doc.stored_name}`)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-primary hover:underline truncate"
