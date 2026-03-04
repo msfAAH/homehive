@@ -8,7 +8,7 @@ const router = Router();
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
 // Helper: verify room belongs to user (through home)
-function verifyRoomOwnership(roomId: string | number, userId: number): boolean {
+function verifyRoomOwnership(roomId: string, userId: number): boolean {
   const db = getDb();
   return !!db.prepare(`
     SELECT r.id FROM rooms r
@@ -18,7 +18,7 @@ function verifyRoomOwnership(roomId: string | number, userId: number): boolean {
 }
 
 // Helper: verify item belongs to user (through room -> home)
-function verifyItemOwnership(itemId: string | number, userId: number): any {
+function verifyItemOwnership(itemId: string, userId: number): any {
   const db = getDb();
   return db.prepare(`
     SELECT i.* FROM items i

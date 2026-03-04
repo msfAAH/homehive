@@ -5,13 +5,13 @@ import type { AuthRequest } from '../middleware/auth.js';
 const router = Router();
 
 // Helper: verify home belongs to user
-function verifyHomeOwnership(homeId: string | number, userId: number): boolean {
+function verifyHomeOwnership(homeId: string, userId: number): boolean {
   const db = getDb();
   return !!db.prepare('SELECT id FROM homes WHERE id = ? AND user_id = ?').get(homeId, userId);
 }
 
 // Helper: verify project belongs to user (through home)
-function verifyProjectOwnership(projectId: string | number, userId: number): any {
+function verifyProjectOwnership(projectId: string, userId: number): any {
   const db = getDb();
   return db.prepare(`
     SELECT p.* FROM projects p

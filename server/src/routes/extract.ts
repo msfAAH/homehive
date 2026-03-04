@@ -89,7 +89,7 @@ Summarize any recommended maintenance tasks, intervals, or service requirements.
 Be concise and practical. Use bullet points where helpful.`;
 
 // Helper: verify item belongs to user
-function verifyItemOwnership(itemId: string | number, userId: number): any {
+function verifyItemOwnership(itemId: string, userId: number): any {
   const db = getDb();
   return db.prepare(`
     SELECT i.* FROM items i
@@ -100,7 +100,7 @@ function verifyItemOwnership(itemId: string | number, userId: number): any {
 }
 
 // Helper: verify project belongs to user
-function verifyProjectOwnership(projectId: string | number, userId: number): any {
+function verifyProjectOwnership(projectId: string, userId: number): any {
   const db = getDb();
   return db.prepare(`
     SELECT p.* FROM projects p

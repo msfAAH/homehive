@@ -9,7 +9,7 @@ const router = Router();
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
 // Helper: verify that an entity belongs to the user
-function verifyEntityOwnership(entityType: string, entityId: string | number, userId: number): boolean {
+function verifyEntityOwnership(entityType: string, entityId: string, userId: number): boolean {
   const db = getDb();
   switch (entityType) {
     case 'home':
@@ -35,7 +35,7 @@ function verifyEntityOwnership(entityType: string, entityId: string | number, us
 }
 
 // Helper: verify attachment belongs to user
-function verifyAttachmentOwnership(attachmentId: string | number, userId: number): any {
+function verifyAttachmentOwnership(attachmentId: string, userId: number): any {
   const db = getDb();
   const att = db.prepare('SELECT * FROM attachments WHERE id = ?').get(attachmentId) as any;
   if (!att) return null;

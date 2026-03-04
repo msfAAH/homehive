@@ -4,7 +4,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-function recalculateProjectCost(projectId: number | string): void {
+function recalculateProjectCost(projectId: string | number): void {
   const db = getDb();
   db.prepare(`
     UPDATE projects SET actual_cost = (
@@ -14,7 +14,7 @@ function recalculateProjectCost(projectId: number | string): void {
 }
 
 // Helper: verify project belongs to user
-function verifyProjectOwnership(projectId: string | number, userId: number): boolean {
+function verifyProjectOwnership(projectId: string, userId: number): boolean {
   const db = getDb();
   return !!db.prepare(`
     SELECT p.id FROM projects p
@@ -24,7 +24,7 @@ function verifyProjectOwnership(projectId: string | number, userId: number): boo
 }
 
 // Helper: verify line item belongs to user (through project -> home)
-function verifyLineItemOwnership(lineItemId: string | number, userId: number): any {
+function verifyLineItemOwnership(lineItemId: string, userId: number): any {
   const db = getDb();
   return db.prepare(`
     SELECT li.* FROM line_items li
