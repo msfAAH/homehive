@@ -49,6 +49,6 @@ const db = initDb();
 runSchema(db);
 seed(db);
 
-app.listen(PORT, () => {
-  console.log(`HomeHive server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`HomeHive server running on http://0.0.0.0:${PORT}`);
 });
