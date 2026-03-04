@@ -21,9 +21,14 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 
 const allowedOrigins = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL]
+  ? process.env.FRONTEND_URL.split(',').map(u => u.trim())
   : undefined;
-app.use(cors(allowedOrigins ? { origin: allowedOrigins } : undefined));
+app.use(cors({
+  origin: allowedOrigins || true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 
 // Serve uploaded files
