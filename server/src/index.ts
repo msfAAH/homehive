@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
-import cors from 'cors';
+// cors handled manually below
 import path from 'path';
 import { initDb } from './db/connection.js';
 import { runSchema } from './db/schema.js';
@@ -20,15 +20,24 @@ import extractRouter from './routes/extract.js';
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 
-const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map(u => u.trim())
-  : undefined;
-app.use(cors({
-  origin: allowedOrigins || true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+// CORS: handle preflight manually to guarantee headers are always sent
+const ALLOWED_ORIGIN = process.env.FRONTEND_URL || '*';
+app.use((_req, res, next) => {
+  const origin = _req.headers.origin;
+  if (ALLOWED_ORIGIN === '*') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else if (origin && ALLOWED_ORIGIN.split(',').map(u => u.trim()).includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  if (_req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+  next();
+});
 app.use(express.json());
 
 // Serve uploaded files
