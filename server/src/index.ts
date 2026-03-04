@@ -22,6 +22,13 @@ const PORT = Number(process.env.PORT) || 3001;
 
 // CORS setup - allow all origins for now
 app.use(cors());
+
+// Log every request for debugging
+app.use((req, _res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 app.use(express.json());
 
 // Serve uploaded files
@@ -29,6 +36,7 @@ app.use('/uploads', express.static(path.join(import.meta.dirname, '../uploads'))
 
 // Public routes (no auth required)
 app.get('/api/health', (_req, res) => {
+  console.log('Health check hit - responding ok');
   res.json({ status: 'ok' });
 });
 app.use('/api/auth', authRouter);
