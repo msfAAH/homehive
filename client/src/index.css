@@ -1,39 +1,53 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
 
 @theme {
-  /* Brand & actions */
-  --color-primary: #c2861b;
-  --color-primary-dark: #a86e14;
-  --color-primary-light: #d9a03a;
+  /* Primary Colors */
+  --color-primary: #F9AA20;
+  --color-primary-dark: #e09810;
+  --color-primary-light: #fbbb4a;
 
-  /* Navigation */
-  --color-nav: #1c1917;
-  --color-nav-hover: #292524;
+  /* Navigation — Dark Navy */
+  --color-nav: #1E2D3D;
+  --color-nav-hover: #2C4459;
 
   /* Surfaces */
   --color-surface: #ffffff;
-  --color-surface-dark: #f7f5f1;
+  --color-surface-dark: #F7F6F1;
 
   /* Text */
-  --color-text: #1c1917;
-  --color-text-muted: #78716c;
-  --color-text-secondary: #78716c;
+  --color-text: #2A2D34;
+  --color-text-muted: #6b7280;
+  --color-text-secondary: #6b7280;
+
+  /* Accent colors */
+  --color-slate: #3C5F7C;
+  --color-slate-dark: #2C4459;
+  --color-sand: #C4B99A;
 
   /* Borders */
-  --color-border: #e5ddd1;
+  --color-border: #E1E0D1;
 
   /* Semantic */
-  --color-danger: #dc2626;
-  --color-success: #059669;
+  --color-danger: #F0533E;
+  --color-success: #5B8C5A;
+  --color-info: #7BA3BE;
+
+  /* Fonts */
+  --font-display: 'Lora', Georgia, serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 html,
 body {
   margin: 0;
-  font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   background-color: var(--color-surface-dark);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2 {
+  font-family: var(--font-display);
 }

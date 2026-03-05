@@ -20,15 +20,8 @@ import extractRouter from './routes/extract.js';
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 
-// CORS setup - allow all origins
-const corsOptions = {
-  origin: true,
-  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-};
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// CORS setup - allow all origins for now
+app.use(cors());
 
 // Log every request for debugging
 app.use((req, _res, next) => {

@@ -46,17 +46,24 @@ export default function SignupPage() {
     }
   };
 
-  const inputClass = 'w-full rounded-lg border border-border px-3 py-2.5 text-sm bg-white text-text focus:outline-primary focus:ring-1 focus:ring-primary';
+  const inputClass = 'w-full rounded-lg border border-border px-3 py-2.5 text-sm bg-white text-text focus:outline-none focus:ring-2 focus:ring-slate/30 focus:border-slate transition-colors';
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-surface-dark px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-primary">HomeHive</h1>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-primary" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            <h1 className="text-3xl font-semibold text-nav" style={{ fontFamily: 'Lora, Georgia, serif' }}>
+              Call <span className="text-primary">Hank</span>
+            </h1>
+          </div>
           <p className="mt-2 text-sm text-text-muted">Create your account</p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
           {error && (
             <div className="mb-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
               {error}
@@ -119,7 +126,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
+              className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-nav hover:bg-primary-dark transition-colors disabled:opacity-50"
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>

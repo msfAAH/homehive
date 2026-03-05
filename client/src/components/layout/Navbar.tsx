@@ -13,13 +13,13 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex min-h-[56px] shrink-0 items-center bg-nav px-4 text-white shadow-sm">
+    <nav className="flex min-h-[60px] shrink-0 items-center bg-nav px-4 text-white shadow-md">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
         <div className="flex items-center gap-3">
           {!isHome && (
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center justify-center rounded-lg p-1 hover:bg-nav-hover transition-colors"
+              className="flex items-center justify-center rounded-full p-1.5 hover:bg-nav-hover transition-colors"
               aria-label="Go back"
             >
               <svg
@@ -36,8 +36,14 @@ export default function Navbar() {
               </svg>
             </button>
           )}
-          <Link to="/" className="text-xl font-bold tracking-tight">
-            HomeHive
+          <Link to="/" className="flex items-center gap-2 group">
+            {/* House icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            <span className="font-serif text-xl font-semibold tracking-tight text-white" style={{ fontFamily: 'Lora, Georgia, serif' }}>
+              Call <span className="text-primary">Hank</span>
+            </span>
           </Link>
         </div>
 
