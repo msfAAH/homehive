@@ -4,7 +4,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-async function recalculateProjectCost(projectId: string | number): Promise<void> {
+async function recalculateProjectCost(projectId: string | string[] | number): Promise<void> {
   const sql = getDb();
   await sql`
     UPDATE projects SET actual_cost = (
@@ -13,7 +13,7 @@ async function recalculateProjectCost(projectId: string | number): Promise<void>
   `;
 }
 
-async function verifyProjectOwnership(projectId: string, userId: number): Promise<boolean> {
+async function verifyProjectOwnership(projectId: string | string[], userId: number): Promise<boolean> {
   const sql = getDb();
   const rows = await sql`
     SELECT p.id FROM projects p
@@ -23,7 +23,7 @@ async function verifyProjectOwnership(projectId: string, userId: number): Promis
   return rows.length > 0;
 }
 
-async function verifyLineItemOwnership(lineItemId: string, userId: number): Promise<any> {
+async function verifyLineItemOwnership(lineItemId: string | string[], userId: number): Promise<any> {
   const sql = getDb();
   const [row] = await sql`
     SELECT li.* FROM line_items li
