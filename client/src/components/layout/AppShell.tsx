@@ -10,7 +10,7 @@ export default function AppShell() {
         className="flex-1 overflow-y-auto overscroll-contain"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="mx-auto max-w-5xl px-4 pt-[72px] pb-8">
+        <div className="mx-auto max-w-5xl px-4 pb-8" style={{ paddingTop: 'calc(56px + env(safe-area-inset-top) + 1rem)' }}>
           <Outlet />
         </div>
       </main>
