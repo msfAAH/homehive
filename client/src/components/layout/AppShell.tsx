@@ -3,10 +3,16 @@ import Navbar from './Navbar';
 
 export default function AppShell() {
   return (
-    <div className="min-h-[100dvh] bg-background">
+    <div className="fixed inset-0 flex flex-col overflow-hidden">
       <Navbar />
-      <main className="mx-auto max-w-5xl px-4 pt-[72px]" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
-        <Outlet />
+      <main
+        id="main-scroll"
+        className="flex-1 overflow-y-auto overscroll-contain"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <div className="mx-auto max-w-5xl px-4 pt-[72px] pb-8">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
