@@ -67,7 +67,7 @@ Summarize any recommended maintenance tasks, intervals, or service requirements.
 
 Be concise and practical. Use bullet points where helpful.`;
 
-async function verifyItemOwnership(itemId: string, userId: number): Promise<any> {
+async function verifyItemOwnership(itemId: string | string[], userId: number): Promise<any> {
   const sql = getDb();
   const [row] = await sql`
     SELECT i.* FROM items i
@@ -78,7 +78,7 @@ async function verifyItemOwnership(itemId: string, userId: number): Promise<any>
   return row ?? null;
 }
 
-async function verifyProjectOwnership(projectId: string, userId: number): Promise<any> {
+async function verifyProjectOwnership(projectId: string | string[], userId: number): Promise<any> {
   const sql = getDb();
   const [row] = await sql`
     SELECT p.* FROM projects p
