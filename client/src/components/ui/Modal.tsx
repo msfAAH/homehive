@@ -9,13 +9,15 @@ interface ModalProps {
 
 export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
   useEffect(() => {
+    const scrollEl = document.getElementById('main-scroll');
+    if (!scrollEl) return;
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      scrollEl.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = '';
+      scrollEl.style.overflow = '';
     }
     return () => {
-      document.body.style.overflow = '';
+      scrollEl.style.overflow = '';
     };
   }, [isOpen]);
 
