@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { initDb } from './db/connection.js';
 import { runSchema } from './db/schema.js';
 import { seed } from './db/seed.js';
@@ -20,6 +21,13 @@ import extractRouter from './routes/extract.js';
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 
+// Persistent storage directory (Railway volume or local fallback)
+const uploadsDir = process.env.DATA_DIR
+  ? path.join(process.env.DATA_DIR, 'uploads')
+  : path.join(import.meta.dirname, '../uploads');
+fs.mkdirSync(path.join(uploadsDir, 'photos'), { recursive: true });
+fs.mkdirSync(path.join(uploadsDir, 'documents'), { recursive: true });
+
 // CORS setup - allow all origins for now
 app.use(cors());
 
@@ -32,7 +40,7 @@ app.use((req, _res, next) => {
 app.use(express.json());
 
 // Serve uploaded files
-app.use('/uploads', express.static(path.join(import.meta.dirname, '../uploads')));
+app.use('/uploads', express.static(uploadsDir));
 
 // Public routes (no auth required)
 app.get('/api/health', (_req, res) => {

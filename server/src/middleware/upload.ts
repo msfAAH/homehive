@@ -2,7 +2,9 @@ import multer from 'multer';
 import crypto from 'crypto';
 import path from 'path';
 
-const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
+const UPLOADS_BASE = process.env.DATA_DIR
+  ? path.join(process.env.DATA_DIR, 'uploads')
+  : path.join(import.meta.dirname, '../../uploads');
 
 const IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.gif'];
 const DOC_EXTS = ['.pdf', '.doc', '.docx', '.txt', '.xlsx', '.csv'];

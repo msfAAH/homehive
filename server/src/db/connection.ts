@@ -4,7 +4,8 @@ import path from 'path';
 let db: Database.Database;
 
 export function initDb(): Database.Database {
-  const dbPath = path.join(import.meta.dirname, '../../homehive.db');
+  const dataDir = process.env.DATA_DIR ?? path.join(import.meta.dirname, '../..');
+  const dbPath = path.join(dataDir, 'homehive.db');
   db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
