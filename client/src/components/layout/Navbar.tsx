@@ -13,10 +13,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav
-      className="fixed top-0 right-0 left-0 z-50 flex items-center bg-primary px-4 text-white shadow-md"
-      style={{ paddingTop: 'env(safe-area-inset-top)', minHeight: 'calc(56px + env(safe-area-inset-top))' }}
-    >
+    <nav className="flex min-h-[56px] shrink-0 items-center bg-primary px-4 text-white shadow-md">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
         <div className="flex items-center gap-3">
           {!isHome && (
