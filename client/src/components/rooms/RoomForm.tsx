@@ -98,6 +98,10 @@ export default function RoomForm({ homeId, room, onSave, onCancel }: RoomFormPro
     const next = emoji === icon ? '' : emoji;
     setIcon(next);
     setManualIcon(next !== '');
+    if (next !== '' && !name.trim()) {
+      const iconEntry = ROOM_ICONS.find((r) => r.emoji === next);
+      if (iconEntry) setName(iconEntry.label);
+    }
   };
 
   const handleIconClear = () => {
