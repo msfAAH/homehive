@@ -4,15 +4,15 @@ import { getDb } from '../db/connection.js';
 const router = Router();
 
 // GET / - list all categories
-router.get('/', (_req, res) => {
-  const db = getDb();
-  const categories = db.prepare('SELECT * FROM project_categories ORDER BY name ASC').all();
+router.get('/', async (_req, res) => {
+  const sql = getDb();
+  const categories = await sql`SELECT * FROM project_categories ORDER BY name ASC`;
   res.json(categories);
 });
 
 // POST / - create category
-router.post('/', (req, res) => {
-  const db = getDb();
+router.post('/', async (req, res) => {
+  const sql = getDb();
   const { name } = req.body;
 
   if (!name || !name.trim()) {
@@ -21,11 +21,12 @@ router.post('/', (req, res) => {
   }
 
   try {
-    const result = db.prepare('INSERT INTO project_categories (name) VALUES (?)').run(name.trim());
-    const category = db.prepare('SELECT * FROM project_categories WHERE id = ?').get(result.lastInsertRowid);
+    const [category] = await sql`
+      INSERT INTO project_categories (name) VALUES (${name.trim()}) RETURNING *
+    `;
     res.status(201).json(category);
   } catch (err: any) {
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (err.code === '23505') {
       res.status(409).json({ error: 'Category already exists' });
       return;
     }

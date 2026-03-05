@@ -1,19 +1,15 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { neon } from '@neondatabase/serverless';
 
-let db: Database.Database;
+let _sql: ReturnType<typeof neon> | null = null;
 
-export function initDb(): Database.Database {
-  const dbPath = path.join(import.meta.dirname, '../../homehive.db');
-  db = new Database(dbPath);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-  return db;
+export function initDb() {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error('DATABASE_URL environment variable is not set');
+  _sql = neon(url);
+  return _sql;
 }
 
-export function getDb(): Database.Database {
-  if (!db) {
-    throw new Error('Database not initialized. Call initDb() first.');
-  }
-  return db;
+export function getDb() {
+  if (!_sql) throw new Error('Database not initialized. Call initDb() first.');
+  return _sql;
 }

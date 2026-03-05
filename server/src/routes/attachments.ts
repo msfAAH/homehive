@@ -8,93 +8,74 @@ import type { AuthRequest } from '../middleware/auth.js';
 const router = Router();
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
-// Helper: verify that an entity belongs to the user
-function verifyEntityOwnership(entityType: string, entityId: string, userId: number): boolean {
-  const db = getDb();
+async function verifyEntityOwnership(entityType: string, entityId: string, userId: number): Promise<boolean> {
+  const sql = getDb();
   switch (entityType) {
-    case 'home':
-      return !!db.prepare('SELECT id FROM homes WHERE id = ? AND user_id = ?').get(entityId, userId);
-    case 'room':
-      return !!db.prepare(`
-        SELECT r.id FROM rooms r JOIN homes h ON r.home_id = h.id
-        WHERE r.id = ? AND h.user_id = ?
-      `).get(entityId, userId);
-    case 'project':
-      return !!db.prepare(`
-        SELECT p.id FROM projects p JOIN homes h ON p.home_id = h.id
-        WHERE p.id = ? AND h.user_id = ?
-      `).get(entityId, userId);
-    case 'item':
-      return !!db.prepare(`
-        SELECT i.id FROM items i JOIN rooms r ON i.room_id = r.id JOIN homes h ON r.home_id = h.id
-        WHERE i.id = ? AND h.user_id = ?
-      `).get(entityId, userId);
+    case 'home': {
+      const rows = await sql`SELECT id FROM homes WHERE id = ${entityId} AND user_id = ${userId}`;
+      return rows.length > 0;
+    }
+    case 'room': {
+      const rows = await sql`SELECT r.id FROM rooms r JOIN homes h ON r.home_id = h.id WHERE r.id = ${entityId} AND h.user_id = ${userId}`;
+      return rows.length > 0;
+    }
+    case 'project': {
+      const rows = await sql`SELECT p.id FROM projects p JOIN homes h ON p.home_id = h.id WHERE p.id = ${entityId} AND h.user_id = ${userId}`;
+      return rows.length > 0;
+    }
+    case 'item': {
+      const rows = await sql`SELECT i.id FROM items i JOIN rooms r ON i.room_id = r.id JOIN homes h ON r.home_id = h.id WHERE i.id = ${entityId} AND h.user_id = ${userId}`;
+      return rows.length > 0;
+    }
     default:
       return false;
   }
 }
 
-// Helper: verify attachment belongs to user
-function verifyAttachmentOwnership(attachmentId: string, userId: number): any {
-  const db = getDb();
-  const att = db.prepare('SELECT * FROM attachments WHERE id = ?').get(attachmentId) as any;
+async function verifyAttachmentOwnership(attachmentId: string, userId: number): Promise<any> {
+  const sql = getDb();
+  const [att] = await sql`SELECT * FROM attachments WHERE id = ${attachmentId}`;
   if (!att) return null;
 
-  // Check ownership through whichever entity the attachment belongs to
-  if (att.home_id && verifyEntityOwnership('home', att.home_id, userId)) return att;
-  if (att.room_id && verifyEntityOwnership('room', att.room_id, userId)) return att;
-  if (att.project_id && verifyEntityOwnership('project', att.project_id, userId)) return att;
-  if (att.item_id && verifyEntityOwnership('item', att.item_id, userId)) return att;
+  if (att.home_id && await verifyEntityOwnership('home', String(att.home_id), userId)) return att;
+  if (att.room_id && await verifyEntityOwnership('room', String(att.room_id), userId)) return att;
+  if (att.project_id && await verifyEntityOwnership('project', String(att.project_id), userId)) return att;
+  if (att.item_id && await verifyEntityOwnership('item', String(att.item_id), userId)) return att;
 
   return null;
 }
 
 // GET / - list attachments filtered by query params
-router.get('/', (req: AuthRequest, res) => {
-  const db = getDb();
+router.get('/', async (req: AuthRequest, res) => {
   const { homeId, roomId, projectId, itemId } = req.query;
 
-  // Verify ownership of the requested entity
-  if (homeId && !verifyEntityOwnership('home', homeId as string, req.userId!)) {
-    res.status(404).json({ error: 'Not found' });
-    return;
+  if (homeId && !await verifyEntityOwnership('home', homeId as string, req.userId!)) {
+    res.status(404).json({ error: 'Not found' }); return;
   }
-  if (roomId && !verifyEntityOwnership('room', roomId as string, req.userId!)) {
-    res.status(404).json({ error: 'Not found' });
-    return;
+  if (roomId && !await verifyEntityOwnership('room', roomId as string, req.userId!)) {
+    res.status(404).json({ error: 'Not found' }); return;
   }
-  if (projectId && !verifyEntityOwnership('project', projectId as string, req.userId!)) {
-    res.status(404).json({ error: 'Not found' });
-    return;
+  if (projectId && !await verifyEntityOwnership('project', projectId as string, req.userId!)) {
+    res.status(404).json({ error: 'Not found' }); return;
   }
-  if (itemId && !verifyEntityOwnership('item', itemId as string, req.userId!)) {
-    res.status(404).json({ error: 'Not found' });
-    return;
+  if (itemId && !await verifyEntityOwnership('item', itemId as string, req.userId!)) {
+    res.status(404).json({ error: 'Not found' }); return;
   }
 
-  let sql = 'SELECT * FROM attachments WHERE 1=1';
-  const params: any[] = [];
+  const sql = getDb();
+  const hId = homeId ? Number(homeId) : null;
+  const rId = roomId ? Number(roomId) : null;
+  const pId = projectId ? Number(projectId) : null;
+  const iId = itemId ? Number(itemId) : null;
 
-  if (homeId) {
-    sql += ' AND home_id = ?';
-    params.push(homeId);
-  }
-  if (roomId) {
-    sql += ' AND room_id = ?';
-    params.push(roomId);
-  }
-  if (projectId) {
-    sql += ' AND project_id = ?';
-    params.push(projectId);
-  }
-  if (itemId) {
-    sql += ' AND item_id = ?';
-    params.push(itemId);
-  }
-
-  sql += ' ORDER BY created_at DESC';
-
-  const attachments = db.prepare(sql).all(...params);
+  const attachments = await sql`
+    SELECT * FROM attachments
+    WHERE (${hId} IS NULL OR home_id = ${hId})
+      AND (${rId} IS NULL OR room_id = ${rId})
+      AND (${pId} IS NULL OR project_id = ${pId})
+      AND (${iId} IS NULL OR item_id = ${iId})
+    ORDER BY created_at DESC
+  `;
   res.json(attachments);
 });
 
@@ -110,89 +91,58 @@ router.post('/', (req: AuthRequest, res, next) => {
     }
     next();
   });
-}, (req: AuthRequest, res) => {
-  const db = getDb();
+}, async (req: AuthRequest, res) => {
   const { homeId, roomId, projectId, itemId, fileType, caption, photoCategory } = req.body;
 
-  // Verify ownership of the target entity
-  if (homeId && !verifyEntityOwnership('home', homeId, req.userId!)) {
-    res.status(404).json({ error: 'Not found' });
-    return;
+  if (homeId && !await verifyEntityOwnership('home', homeId, req.userId!)) {
+    res.status(404).json({ error: 'Not found' }); return;
   }
-  if (roomId && !verifyEntityOwnership('room', roomId, req.userId!)) {
-    res.status(404).json({ error: 'Not found' });
-    return;
+  if (roomId && !await verifyEntityOwnership('room', roomId, req.userId!)) {
+    res.status(404).json({ error: 'Not found' }); return;
   }
-  if (projectId && !verifyEntityOwnership('project', projectId, req.userId!)) {
-    res.status(404).json({ error: 'Not found' });
-    return;
+  if (projectId && !await verifyEntityOwnership('project', projectId, req.userId!)) {
+    res.status(404).json({ error: 'Not found' }); return;
   }
-  if (itemId && !verifyEntityOwnership('item', itemId, req.userId!)) {
-    res.status(404).json({ error: 'Not found' });
-    return;
+  if (itemId && !await verifyEntityOwnership('item', itemId, req.userId!)) {
+    res.status(404).json({ error: 'Not found' }); return;
   }
 
   const files = req.files as Express.Multer.File[];
-
   if (!files || files.length === 0) {
     res.status(400).json({ error: 'No files uploaded' });
     return;
   }
 
-  const insert = db.prepare(`
-    INSERT INTO attachments (home_id, room_id, project_id, item_id, file_name, stored_name, file_type, mime_type, file_size, caption, photo_category)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
+  const sql = getDb();
   const attachments: any[] = [];
+  for (const file of files) {
+    const [attachment] = await sql`
+      INSERT INTO attachments (home_id, room_id, project_id, item_id, file_name, stored_name, file_type, mime_type, file_size, caption, photo_category)
+      VALUES (${homeId || null}, ${roomId || null}, ${projectId || null}, ${itemId || null}, ${file.originalname}, ${file.filename}, ${fileType || 'document'}, ${file.mimetype}, ${file.size}, ${caption || null}, ${photoCategory || null})
+      RETURNING *
+    `;
+    attachments.push(attachment);
+  }
 
-  const insertAll = db.transaction(() => {
-    for (const file of files) {
-      const result = insert.run(
-        homeId || null,
-        roomId || null,
-        projectId || null,
-        itemId || null,
-        file.originalname,
-        file.filename,
-        fileType || 'document',
-        file.mimetype,
-        file.size,
-        caption || null,
-        photoCategory || null,
-      );
-      const attachment = db.prepare('SELECT * FROM attachments WHERE id = ?').get(result.lastInsertRowid);
-      attachments.push(attachment);
-    }
-  });
-
-  insertAll();
   res.status(201).json(attachments);
 });
 
 // DELETE /:id - delete attachment and remove file from disk
-router.delete('/:id', (req: AuthRequest, res) => {
-  const attachment = verifyAttachmentOwnership(req.params.id as string, req.userId!);
+router.delete('/:id', async (req: AuthRequest, res) => {
+  const attachment = await verifyAttachmentOwnership(req.params.id, req.userId!);
   if (!attachment) {
     res.status(404).json({ error: 'Attachment not found' });
     return;
   }
 
-  // Determine subdirectory based on file_type
   const subdir = attachment.file_type === 'photo' ? 'photos' : 'documents';
   const filePath = path.join(UPLOADS_BASE, subdir, attachment.stored_name);
-
-  // Remove file from disk
   try {
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-  } catch {
-    // File may already be gone, continue with DB deletion
-  }
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  } catch { /* ignore */ }
 
-  const db = getDb();
-  db.prepare('DELETE FROM attachments WHERE id = ?').run(req.params.id as string);
+  const sql = getDb();
+  await sql`DELETE FROM attachments WHERE id = ${req.params.id}`;
   res.json({ message: 'Attachment deleted' });
 });
 
