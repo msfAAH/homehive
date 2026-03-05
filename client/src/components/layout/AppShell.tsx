@@ -11,7 +11,7 @@ export default function AppShell() {
       <main
         id="main-scroll"
         className="flex-1 overflow-y-auto overscroll-contain"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{ backgroundColor: '#E1E0D1', paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="mx-auto max-w-5xl px-4 py-8">
           <Outlet />
