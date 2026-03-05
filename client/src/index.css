@@ -1,21 +1,39 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 @theme {
-  --color-primary: #f59e0b;
-  --color-primary-dark: #d97706;
-  --color-primary-light: #fbbf24;
+  /* Brand & actions */
+  --color-primary: #c2861b;
+  --color-primary-dark: #a86e14;
+  --color-primary-light: #d9a03a;
+
+  /* Navigation */
+  --color-nav: #1c1917;
+  --color-nav-hover: #292524;
+
+  /* Surfaces */
   --color-surface: #ffffff;
-  --color-surface-dark: #f9fafb;
-  --color-text: #111827;
-  --color-text-secondary: #6b7280;
-  --color-border: #e5e7eb;
-  --color-danger: #ef4444;
-  --color-success: #10b981;
+  --color-surface-dark: #f7f5f1;
+
+  /* Text */
+  --color-text: #1c1917;
+  --color-text-muted: #78716c;
+  --color-text-secondary: #78716c;
+
+  /* Borders */
+  --color-border: #e5ddd1;
+
+  /* Semantic */
+  --color-danger: #dc2626;
+  --color-success: #059669;
 }
 
+html,
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
   background-color: var(--color-surface-dark);
   color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
