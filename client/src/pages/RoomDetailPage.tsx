@@ -5,6 +5,7 @@ import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import EmptyState from '../components/ui/EmptyState';
 import RoomForm from '../components/rooms/RoomForm';
+import ProjectForm from '../components/projects/ProjectForm';
 import ItemsSection from '../components/items/ItemsSection';
 import { apiGet, apiDelete, apiUpload, uploadsUrl } from '../api/client';
 import type { Room, Project, Attachment, Item } from '../types';
@@ -44,6 +45,7 @@ export default function RoomDetailPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEditRoom, setShowEditRoom] = useState(false);
+  const [showAddProject, setShowAddProject] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   const fetchAll = async () => {
@@ -169,7 +171,12 @@ export default function RoomDetailPage() {
 
       {/* Projects Section */}
       <div className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold text-text">Projects</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-text">Projects</h2>
+          <Button size="sm" onClick={() => setShowAddProject(true)}>
+            Add Project
+          </Button>
+        </div>
         {projects.length === 0 ? (
           <EmptyState message="No projects assigned to this room." />
         ) : (
@@ -290,6 +297,16 @@ export default function RoomDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Add Project Modal */}
+      <Modal isOpen={showAddProject} onClose={() => setShowAddProject(false)} title="Add Project">
+        <ProjectForm
+          homeId={hId}
+          defaultRoomId={rId}
+          onSave={() => { setShowAddProject(false); fetchAll(); }}
+          onCancel={() => setShowAddProject(false)}
+        />
+      </Modal>
 
       {/* Edit Room Modal */}
       <Modal isOpen={showEditRoom} onClose={() => setShowEditRoom(false)} title="Edit Room">

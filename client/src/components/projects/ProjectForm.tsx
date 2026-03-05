@@ -8,18 +8,19 @@ import type { Project, Category, Room } from '../../types';
 interface ProjectFormProps {
   homeId: number;
   project?: Project;
+  defaultRoomId?: number;
   onSave: () => void;
   onCancel: () => void;
 }
 
-export default function ProjectForm({ homeId, project, onSave, onCancel }: ProjectFormProps) {
+export default function ProjectForm({ homeId, project, defaultRoomId, onSave, onCancel }: ProjectFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [name, setName] = useState(project?.name ?? '');
   const [description, setDescription] = useState(project?.description ?? '');
   const [categoryId, setCategoryId] = useState(String(project?.category_id ?? ''));
   const [status, setStatus] = useState<string>(project?.status ?? 'planned');
-  const [roomId, setRoomId] = useState(String(project?.room_id ?? ''));
+  const [roomId, setRoomId] = useState(String(project?.room_id ?? defaultRoomId ?? ''));
   const [yearCreated, setYearCreated] = useState(project?.year_created ? String(project.year_created) : '');
   const [estimatedCost, setEstimatedCost] = useState(project?.estimated_cost ? String(project.estimated_cost) : '');
   const [saving, setSaving] = useState(false);
