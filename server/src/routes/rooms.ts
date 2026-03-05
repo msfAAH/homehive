@@ -4,13 +4,13 @@ import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-async function verifyHomeOwnership(homeId: string | string[], userId: number): Promise<boolean> {
+async function verifyHomeOwnership(homeId: string, userId: number): Promise<boolean> {
   const sql = getDb();
   const rows = await sql`SELECT id FROM homes WHERE id = ${homeId} AND user_id = ${userId}`;
   return rows.length > 0;
 }
 
-async function verifyRoomOwnership(roomId: string | string[], userId: number): Promise<any> {
+async function verifyRoomOwnership(roomId: string, userId: number): Promise<any> {
   const sql = getDb();
   const [row] = await sql`
     SELECT r.* FROM rooms r
