@@ -53,10 +53,16 @@ app.use('/api/items', authMiddleware, itemsRouter);
 app.use('/api/extract', authMiddleware, extractRouter);
 
 // Initialize database and start server
-const db = initDb();
-runSchema(db);
-seed(db);
+async function start() {
+  initDb();
+  await runSchema();
+  await seed();
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`HomeHive server running on http://0.0.0.0:${PORT}`);
+  });
+}
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`HomeHive server running on http://0.0.0.0:${PORT}`);
+start().catch((err) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });

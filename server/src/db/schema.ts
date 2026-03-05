@@ -1,40 +1,60 @@
-import type Database from 'better-sqlite3';
-import { migrate001 } from './migrations/001-add-users.js';
+import { getDb } from './connection.js';
 
-export function runSchema(db: Database.Database): void {
-  db.exec(`
-    PRAGMA foreign_keys = ON;
+export async function runSchema(): Promise<void> {
+  const sql = getDb();
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT,
+      first_name TEXT NOT NULL DEFAULT '',
+      last_name TEXT NOT NULL DEFAULT '',
+      google_id TEXT UNIQUE,
+      avatar_url TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+
+  await sql`
     CREATE TABLE IF NOT EXISTS homes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id),
       name TEXT NOT NULL,
       address TEXT,
       year_built INTEGER,
       year_bought INTEGER,
       notes TEXT,
       cover_photo TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
 
+  await sql`
     CREATE TABLE IF NOT EXISTS rooms (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       home_id INTEGER NOT NULL REFERENCES homes(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
       icon TEXT,
       floor TEXT,
       notes TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
 
+  await sql`
     CREATE TABLE IF NOT EXISTS project_categories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       name TEXT NOT NULL UNIQUE
-    );
+    )
+  `;
 
+  await sql`
     CREATE TABLE IF NOT EXISTS projects (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       home_id INTEGER NOT NULL REFERENCES homes(id) ON DELETE CASCADE,
       room_id INTEGER REFERENCES rooms(id) ON DELETE SET NULL,
       category_id INTEGER REFERENCES project_categories(id) ON DELETE SET NULL,
@@ -42,28 +62,32 @@ export function runSchema(db: Database.Database): void {
       description TEXT,
       status TEXT NOT NULL DEFAULT 'planned',
       year_created INTEGER,
-      estimated_cost REAL DEFAULT 0,
-      actual_cost REAL DEFAULT 0,
+      estimated_cost NUMERIC DEFAULT 0,
+      actual_cost NUMERIC DEFAULT 0,
       warranty_info TEXT,
       maintenance_info TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
 
+  await sql`
     CREATE TABLE IF NOT EXISTS line_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
       description TEXT NOT NULL,
-      quantity REAL DEFAULT 1,
-      unit_cost REAL DEFAULT 0,
-      total_cost REAL GENERATED ALWAYS AS (quantity * unit_cost) STORED,
+      quantity NUMERIC DEFAULT 1,
+      unit_cost NUMERIC DEFAULT 0,
+      total_cost NUMERIC GENERATED ALWAYS AS (quantity * unit_cost) STORED,
       vendor TEXT,
       notes TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
 
+  await sql`
     CREATE TABLE IF NOT EXISTS contractors (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
       company_name TEXT NOT NULL,
       contractor_type TEXT,
@@ -71,12 +95,14 @@ export function runSchema(db: Database.Database): void {
       phone TEXT,
       email TEXT,
       website TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
 
+  await sql`
     CREATE TABLE IF NOT EXISTS items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       room_id INTEGER NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
       name TEXT NOT NULL,
       category TEXT,
@@ -84,20 +110,23 @@ export function runSchema(db: Database.Database): void {
       model TEXT,
       serial_number TEXT,
       purchase_date TEXT,
-      purchase_price REAL,
+      purchase_price NUMERIC,
       warranty_expiry TEXT,
       notes TEXT,
       warranty_info TEXT,
       maintenance_info TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
 
+  await sql`
     CREATE TABLE IF NOT EXISTS attachments (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       home_id INTEGER REFERENCES homes(id) ON DELETE CASCADE,
       room_id INTEGER REFERENCES rooms(id) ON DELETE CASCADE,
       project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+      item_id INTEGER REFERENCES items(id) ON DELETE CASCADE,
       file_name TEXT NOT NULL,
       stored_name TEXT NOT NULL,
       file_type TEXT NOT NULL,
@@ -105,50 +134,7 @@ export function runSchema(db: Database.Database): void {
       file_size INTEGER,
       caption TEXT,
       photo_category TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-  `);
-
-  // Migrations for existing databases
-  const roomCols = db.pragma('table_info(rooms)') as { name: string }[];
-  if (roomCols.length > 0 && !roomCols.some((c) => c.name === 'icon')) {
-    db.exec(`ALTER TABLE rooms ADD COLUMN icon TEXT`);
-  }
-
-  const homeCols = db.pragma('table_info(homes)') as { name: string }[];
-  if (homeCols.length > 0 && !homeCols.some((c) => c.name === 'cover_photo')) {
-    db.exec(`ALTER TABLE homes ADD COLUMN cover_photo TEXT`);
-  }
-
-  const contractorCols = db.pragma('table_info(contractors)') as { name: string }[];
-  if (contractorCols.length > 0 && !contractorCols.some((c) => c.name === 'contractor_type')) {
-    db.exec(`ALTER TABLE contractors ADD COLUMN contractor_type TEXT`);
-  }
-
-  const attachmentCols = db.pragma('table_info(attachments)') as { name: string }[];
-  if (attachmentCols.length > 0 && !attachmentCols.some((c) => c.name === 'photo_category')) {
-    db.exec(`ALTER TABLE attachments ADD COLUMN photo_category TEXT`);
-  }
-  if (attachmentCols.length > 0 && !attachmentCols.some((c) => c.name === 'item_id')) {
-    db.exec(`ALTER TABLE attachments ADD COLUMN item_id INTEGER`);
-  }
-
-  const projectCols = db.pragma('table_info(projects)') as { name: string }[];
-  if (projectCols.length > 0 && !projectCols.some((c) => c.name === 'warranty_info')) {
-    db.exec(`ALTER TABLE projects ADD COLUMN warranty_info TEXT`);
-  }
-  if (projectCols.length > 0 && !projectCols.some((c) => c.name === 'maintenance_info')) {
-    db.exec(`ALTER TABLE projects ADD COLUMN maintenance_info TEXT`);
-  }
-
-  const itemCols = db.pragma('table_info(items)') as { name: string }[];
-  if (itemCols.length > 0 && !itemCols.some((c) => c.name === 'warranty_info')) {
-    db.exec(`ALTER TABLE items ADD COLUMN warranty_info TEXT`);
-  }
-  if (itemCols.length > 0 && !itemCols.some((c) => c.name === 'maintenance_info')) {
-    db.exec(`ALTER TABLE items ADD COLUMN maintenance_info TEXT`);
-  }
-
-  // Run user authentication migration
-  migrate001(db);
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
 }

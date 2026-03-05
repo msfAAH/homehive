@@ -4,59 +4,56 @@ import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-function recalculateProjectCost(projectId: string | number): void {
-  const db = getDb();
-  db.prepare(`
+async function recalculateProjectCost(projectId: string | number): Promise<void> {
+  const sql = getDb();
+  await sql`
     UPDATE projects SET actual_cost = (
-      SELECT COALESCE(SUM(total_cost), 0) FROM line_items WHERE project_id = ?
-    ) WHERE id = ?
-  `).run(projectId, projectId);
+      SELECT COALESCE(SUM(total_cost), 0) FROM line_items WHERE project_id = ${projectId}
+    ) WHERE id = ${projectId}
+  `;
 }
 
-// Helper: verify project belongs to user
-function verifyProjectOwnership(projectId: string, userId: number): boolean {
-  const db = getDb();
-  return !!db.prepare(`
+async function verifyProjectOwnership(projectId: string, userId: number): Promise<boolean> {
+  const sql = getDb();
+  const rows = await sql`
     SELECT p.id FROM projects p
     JOIN homes h ON p.home_id = h.id
-    WHERE p.id = ? AND h.user_id = ?
-  `).get(projectId, userId);
+    WHERE p.id = ${projectId} AND h.user_id = ${userId}
+  `;
+  return rows.length > 0;
 }
 
-// Helper: verify line item belongs to user (through project -> home)
-function verifyLineItemOwnership(lineItemId: string, userId: number): any {
-  const db = getDb();
-  return db.prepare(`
+async function verifyLineItemOwnership(lineItemId: string, userId: number): Promise<any> {
+  const sql = getDb();
+  const [row] = await sql`
     SELECT li.* FROM line_items li
     JOIN projects p ON li.project_id = p.id
     JOIN homes h ON p.home_id = h.id
-    WHERE li.id = ? AND h.user_id = ?
-  `).get(lineItemId, userId);
+    WHERE li.id = ${lineItemId} AND h.user_id = ${userId}
+  `;
+  return row ?? null;
 }
 
 // GET /project/:projectId - list line items for a project
-router.get('/project/:projectId', (req: AuthRequest, res) => {
-  if (!verifyProjectOwnership(req.params.projectId as string, req.userId!)) {
+router.get('/project/:projectId', async (req: AuthRequest, res) => {
+  if (!await verifyProjectOwnership(req.params.projectId, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
 
-  const db = getDb();
-  const items = db.prepare(
-    'SELECT * FROM line_items WHERE project_id = ? ORDER BY created_at ASC',
-  ).all(req.params.projectId as string);
+  const sql = getDb();
+  const items = await sql`SELECT * FROM line_items WHERE project_id = ${req.params.projectId} ORDER BY created_at ASC`;
   res.json(items);
 });
 
 // POST /project/:projectId - create line item
-router.post('/project/:projectId', (req: AuthRequest, res) => {
-  if (!verifyProjectOwnership(req.params.projectId as string, req.userId!)) {
+router.post('/project/:projectId', async (req: AuthRequest, res) => {
+  if (!await verifyProjectOwnership(req.params.projectId, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
 
-  const db = getDb();
-  const projectId = req.params.projectId as string;
+  const sql = getDb();
   const { description, quantity, unit_cost, vendor, notes } = req.body;
 
   if (!description || !description.trim()) {
@@ -64,65 +61,54 @@ router.post('/project/:projectId', (req: AuthRequest, res) => {
     return;
   }
 
-  const result = db.prepare(`
+  const [item] = await sql`
     INSERT INTO line_items (project_id, description, quantity, unit_cost, vendor, notes)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(
-    projectId,
-    description.trim(),
-    quantity ?? 1,
-    unit_cost ?? 0,
-    vendor || null,
-    notes || null,
-  );
+    VALUES (${req.params.projectId}, ${description.trim()}, ${quantity ?? 1}, ${unit_cost ?? 0}, ${vendor || null}, ${notes || null})
+    RETURNING *
+  `;
 
-  recalculateProjectCost(projectId);
-
-  const item = db.prepare('SELECT * FROM line_items WHERE id = ?').get(result.lastInsertRowid);
+  await recalculateProjectCost(req.params.projectId);
   res.status(201).json(item);
 });
 
 // PUT /:id - update line item
-router.put('/:id', (req: AuthRequest, res) => {
-  const existing = verifyLineItemOwnership(req.params.id as string, req.userId!) as any;
+router.put('/:id', async (req: AuthRequest, res) => {
+  const existing = await verifyLineItemOwnership(req.params.id, req.userId!);
   if (!existing) {
     res.status(404).json({ error: 'Line item not found' });
     return;
   }
 
-  const db = getDb();
+  const sql = getDb();
   const { description, quantity, unit_cost, vendor, notes } = req.body;
 
-  db.prepare(`
-    UPDATE line_items SET description = ?, quantity = ?, unit_cost = ?, vendor = ?, notes = ?
-    WHERE id = ?
-  `).run(
-    description ?? existing.description,
-    quantity !== undefined ? quantity : existing.quantity,
-    unit_cost !== undefined ? unit_cost : existing.unit_cost,
-    vendor !== undefined ? vendor : existing.vendor,
-    notes !== undefined ? notes : existing.notes,
-    req.params.id as string,
-  );
+  await sql`
+    UPDATE line_items SET
+      description = ${description ?? existing.description},
+      quantity = ${quantity !== undefined ? quantity : existing.quantity},
+      unit_cost = ${unit_cost !== undefined ? unit_cost : existing.unit_cost},
+      vendor = ${vendor !== undefined ? vendor : existing.vendor},
+      notes = ${notes !== undefined ? notes : existing.notes}
+    WHERE id = ${req.params.id}
+  `;
 
-  recalculateProjectCost(existing.project_id);
+  await recalculateProjectCost(existing.project_id);
 
-  const item = db.prepare('SELECT * FROM line_items WHERE id = ?').get(req.params.id as string);
+  const [item] = await sql`SELECT * FROM line_items WHERE id = ${req.params.id}`;
   res.json(item);
 });
 
 // DELETE /:id - delete line item
-router.delete('/:id', (req: AuthRequest, res) => {
-  const existing = verifyLineItemOwnership(req.params.id as string, req.userId!) as any;
+router.delete('/:id', async (req: AuthRequest, res) => {
+  const existing = await verifyLineItemOwnership(req.params.id, req.userId!);
   if (!existing) {
     res.status(404).json({ error: 'Line item not found' });
     return;
   }
 
-  const db = getDb();
-  db.prepare('DELETE FROM line_items WHERE id = ?').run(req.params.id as string);
-  recalculateProjectCost(existing.project_id);
-
+  const sql = getDb();
+  await sql`DELETE FROM line_items WHERE id = ${req.params.id}`;
+  await recalculateProjectCost(existing.project_id);
   res.json({ message: 'Line item deleted' });
 });
 

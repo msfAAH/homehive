@@ -9,7 +9,7 @@ const router = Router();
 
 // POST /api/auth/signup - register with email/password
 router.post('/signup', async (req, res) => {
-  const db = getDb();
+  const sql = getDb();
   const { email, password, first_name, last_name } = req.body;
 
   if (!email || !password) {
@@ -21,25 +21,18 @@ router.post('/signup', async (req, res) => {
     return;
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
-  if (existing) {
+  const existing = await sql`SELECT id FROM users WHERE email = ${email.toLowerCase().trim()}`;
+  if (existing.length > 0) {
     res.status(409).json({ error: 'An account with this email already exists' });
     return;
   }
 
   const password_hash = await bcrypt.hash(password, 12);
-  const result = db.prepare(`
+  const [user] = await sql`
     INSERT INTO users (email, password_hash, first_name, last_name)
-    VALUES (?, ?, ?, ?)
-  `).run(
-    email.toLowerCase().trim(),
-    password_hash,
-    (first_name || '').trim(),
-    (last_name || '').trim(),
-  );
-
-  const user = db.prepare('SELECT id, email, first_name, last_name, avatar_url, created_at FROM users WHERE id = ?')
-    .get(result.lastInsertRowid) as any;
+    VALUES (${email.toLowerCase().trim()}, ${password_hash}, ${(first_name || '').trim()}, ${(last_name || '').trim()})
+    RETURNING id, email, first_name, last_name, avatar_url, created_at
+  `;
 
   const token = generateToken(user.id);
   res.status(201).json({ token, user });
@@ -47,7 +40,7 @@ router.post('/signup', async (req, res) => {
 
 // POST /api/auth/login - login with email/password
 router.post('/login', async (req, res) => {
-  const db = getDb();
+  const sql = getDb();
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -55,7 +48,7 @@ router.post('/login', async (req, res) => {
     return;
   }
 
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim()) as any;
+  const [user] = await sql`SELECT * FROM users WHERE email = ${email.toLowerCase().trim()}`;
   if (!user || !user.password_hash) {
     res.status(401).json({ error: 'Invalid email or password' });
     return;
@@ -97,10 +90,7 @@ router.post('/google', async (req, res) => {
 
   try {
     const client = new OAuth2Client(clientId);
-    const ticket = await client.verifyIdToken({
-      idToken: credential,
-      audience: clientId,
-    });
+    const ticket = await client.verifyIdToken({ idToken: credential, audience: clientId });
 
     const payload = ticket.getPayload();
     if (!payload || !payload.email) {
@@ -108,31 +98,21 @@ router.post('/google', async (req, res) => {
       return;
     }
 
-    const db = getDb();
+    const sql = getDb();
     const { email, given_name, family_name, picture, sub: googleId } = payload;
 
-    // Check if user exists by google_id or email
-    let user = db.prepare('SELECT * FROM users WHERE google_id = ? OR email = ?').get(googleId, email!.toLowerCase()) as any;
+    let [user] = await sql`SELECT * FROM users WHERE google_id = ${googleId} OR email = ${email!.toLowerCase()}`;
 
     if (user) {
-      // Update google_id and avatar if not set
       if (!user.google_id) {
-        db.prepare('UPDATE users SET google_id = ?, avatar_url = COALESCE(avatar_url, ?), updated_at = datetime(\'now\') WHERE id = ?')
-          .run(googleId, picture || null, user.id);
+        await sql`UPDATE users SET google_id = ${googleId}, avatar_url = COALESCE(avatar_url, ${picture || null}), updated_at = NOW() WHERE id = ${user.id}`;
       }
     } else {
-      // Create new user
-      const result = db.prepare(`
+      [user] = await sql`
         INSERT INTO users (email, first_name, last_name, google_id, avatar_url)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(
-        email!.toLowerCase(),
-        given_name || '',
-        family_name || '',
-        googleId,
-        picture || null,
-      );
-      user = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+        VALUES (${email!.toLowerCase()}, ${given_name || ''}, ${family_name || ''}, ${googleId}, ${picture || null})
+        RETURNING *
+      `;
     }
 
     const token = generateToken(user.id);
@@ -154,10 +134,9 @@ router.post('/google', async (req, res) => {
 });
 
 // GET /api/auth/me - get current user
-router.get('/me', authMiddleware, (req: AuthRequest, res) => {
-  const db = getDb();
-  const user = db.prepare('SELECT id, email, first_name, last_name, avatar_url, created_at FROM users WHERE id = ?')
-    .get(req.userId) as any;
+router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
+  const sql = getDb();
+  const [user] = await sql`SELECT id, email, first_name, last_name, avatar_url, created_at FROM users WHERE id = ${req.userId}`;
 
   if (!user) {
     res.status(404).json({ error: 'User not found' });
