@@ -7,7 +7,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 const router = Router();
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
-async function verifyRoomOwnership(roomId: string, userId: number): Promise<boolean> {
+async function verifyRoomOwnership(roomId: string | string[], userId: number): Promise<boolean> {
   const sql = getDb();
   const rows = await sql`
     SELECT r.id FROM rooms r
@@ -17,7 +17,7 @@ async function verifyRoomOwnership(roomId: string, userId: number): Promise<bool
   return rows.length > 0;
 }
 
-async function verifyItemOwnership(itemId: string, userId: number): Promise<any> {
+async function verifyItemOwnership(itemId: string | string[], userId: number): Promise<any> {
   const sql = getDb();
   const [row] = await sql`
     SELECT i.* FROM items i
