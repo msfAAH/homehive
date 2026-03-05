@@ -6,9 +6,9 @@ const fmt = (n: number) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const statusStyles: Record<string, string> = {
-  planned: 'bg-gray-100 text-gray-700',
-  in_progress: 'bg-amber-100 text-amber-700',
-  completed: 'bg-green-100 text-green-700',
+  planned: 'bg-border text-text-muted',
+  in_progress: 'bg-primary/20 text-nav',
+  completed: 'bg-success/20 text-success',
 };
 
 const statusLabels: Record<string, string> = {
@@ -36,7 +36,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       </div>
 
       {project.category_name && (
-        <span className="mt-1 inline-block rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+        <span className="mt-1 inline-block rounded-full bg-info/15 px-2.5 py-0.5 text-xs font-medium text-slate">
           {project.category_name}
         </span>
       )}
