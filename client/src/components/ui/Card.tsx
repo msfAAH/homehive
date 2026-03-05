@@ -9,8 +9,8 @@ interface CardProps {
 export default function Card({ children, className = '', onClick }: CardProps) {
   return (
     <div
-      className={`rounded-xl border border-border bg-surface p-4 shadow-sm ${
-        onClick ? 'cursor-pointer transition-shadow hover:shadow-md' : ''
+      className={`rounded-2xl border border-border bg-surface p-4 shadow-sm ${
+        onClick ? 'cursor-pointer transition-all hover:shadow-md hover:border-text-muted/30' : ''
       } ${className}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}

@@ -13,13 +13,13 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex min-h-[56px] shrink-0 items-center bg-primary px-4 text-white shadow-md">
+    <nav className="flex min-h-[56px] shrink-0 items-center bg-nav px-4 text-white shadow-sm">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
         <div className="flex items-center gap-3">
           {!isHome && (
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center justify-center rounded-lg p-1 hover:bg-primary-dark transition-colors"
+              className="flex items-center justify-center rounded-lg p-1 hover:bg-nav-hover transition-colors"
               aria-label="Go back"
             >
               <svg
@@ -52,7 +52,7 @@ export default function Navbar() {
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-dark text-xs font-bold">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-nav-hover text-xs font-bold border border-white/20">
                   {(user.first_name?.[0] || user.email[0]).toUpperCase()}
                 </div>
               )}
@@ -62,7 +62,7 @@ export default function Navbar() {
             </div>
             <button
               onClick={handleLogout}
-              className="rounded-lg px-2.5 py-1 text-xs font-medium hover:bg-primary-dark transition-colors"
+              className="rounded-lg px-2.5 py-1 text-xs font-medium text-white/70 hover:text-white hover:bg-nav-hover transition-colors"
             >
               Logout
             </button>

@@ -20,7 +20,7 @@ export default function Select({ label, options, id, className = '', ...rest }: 
       </label>
       <select
         id={selectId}
-        className={`w-full rounded-lg border border-border px-3 py-2 min-h-[44px] bg-white text-text focus:outline-primary focus:ring-1 focus:ring-primary ${className}`}
+        className={`w-full rounded-xl border border-border px-3 py-2 min-h-[44px] bg-white text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors ${className}`}
         {...rest}
       >
         {options.map((opt) => (

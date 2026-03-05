@@ -4,7 +4,7 @@ import Navbar from './Navbar';
 export default function AppShell() {
   return (
     <div
-      className="flex flex-col overflow-hidden bg-primary"
+      className="flex flex-col overflow-hidden bg-nav"
       style={{ height: '100dvh', paddingTop: 'env(safe-area-inset-top)' }}
     >
       <Navbar />
