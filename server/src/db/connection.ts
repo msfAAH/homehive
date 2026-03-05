@@ -1,17 +1,15 @@
 import { neon } from '@neondatabase/serverless';
 
-type SqlTag = (strings: TemplateStringsArray, ...values: any[]) => Promise<any[]>;
+let _sql: ReturnType<typeof neon> | null = null;
 
-let _sql: SqlTag | null = null;
-
-export function initDb(): SqlTag {
+export function initDb() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL environment variable is not set');
-  _sql = neon(url) as unknown as SqlTag;
+  _sql = neon(url);
   return _sql;
 }
 
-export function getDb(): SqlTag {
+export function getDb() {
   if (!_sql) throw new Error('Database not initialized. Call initDb() first.');
   return _sql;
 }

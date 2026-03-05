@@ -8,7 +8,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 const router = Router();
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
-async function verifyEntityOwnership(entityType: string, entityId: string | string[], userId: number): Promise<boolean> {
+async function verifyEntityOwnership(entityType: string, entityId: string, userId: number): Promise<boolean> {
   const sql = getDb();
   switch (entityType) {
     case 'home': {
@@ -32,7 +32,7 @@ async function verifyEntityOwnership(entityType: string, entityId: string | stri
   }
 }
 
-async function verifyAttachmentOwnership(attachmentId: string | string[], userId: number): Promise<any> {
+async function verifyAttachmentOwnership(attachmentId: string, userId: number): Promise<any> {
   const sql = getDb();
   const [att] = await sql`SELECT * FROM attachments WHERE id = ${attachmentId}`;
   if (!att) return null;

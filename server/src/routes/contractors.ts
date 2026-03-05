@@ -4,13 +4,13 @@ import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-async function verifyHomeOwnership(homeId: string | string[], userId: number): Promise<boolean> {
+async function verifyHomeOwnership(homeId: string, userId: number): Promise<boolean> {
   const sql = getDb();
   const rows = await sql`SELECT id FROM homes WHERE id = ${homeId} AND user_id = ${userId}`;
   return rows.length > 0;
 }
 
-async function verifyProjectOwnership(projectId: string | string[], userId: number): Promise<boolean> {
+async function verifyProjectOwnership(projectId: string, userId: number): Promise<boolean> {
   const sql = getDb();
   const rows = await sql`
     SELECT p.id FROM projects p
@@ -20,7 +20,7 @@ async function verifyProjectOwnership(projectId: string | string[], userId: numb
   return rows.length > 0;
 }
 
-async function verifyContractorOwnership(contractorId: string | string[], userId: number): Promise<any> {
+async function verifyContractorOwnership(contractorId: string, userId: number): Promise<any> {
   const sql = getDb();
   const [row] = await sql`
     SELECT c.* FROM contractors c
