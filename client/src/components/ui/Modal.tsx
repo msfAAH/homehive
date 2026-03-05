@@ -37,9 +37,9 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
       />
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-lg rounded-xl bg-white shadow-xl transition-all overflow-y-auto" style={{ maxHeight: 'calc(100dvh - 2rem)', padding: '1.5rem', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+      <div className="relative z-10 w-full max-w-lg rounded-xl bg-surface-dark shadow-xl transition-all overflow-y-auto" style={{ maxHeight: 'calc(100dvh - 2rem)', padding: '1.5rem', paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 id="modal-title" className="text-lg font-bold text-text">
+          <h2 id="modal-title" className="font-serif text-lg font-semibold text-nav" style={{ fontFamily: 'Lora, Georgia, serif' }}>
             {title}
           </h2>
           <button
