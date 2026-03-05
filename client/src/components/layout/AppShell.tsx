@@ -5,7 +5,7 @@ export default function AppShell() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="mx-auto max-w-5xl px-4 pt-[72px] pb-8">
+      <main className="mx-auto max-w-5xl px-4 pt-[72px]" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))' }}>
         <Outlet />
       </main>
     </div>
