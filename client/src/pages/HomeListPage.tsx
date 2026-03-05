@@ -11,14 +11,17 @@ import type { Home } from '../types';
 export default function HomeListPage() {
   const [homes, setHomes] = useState<Home[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
 
   const fetchHomes = async () => {
     try {
       const data = await apiGet<Home[]>('/homes');
       setHomes(data);
-    } catch (err) {
+      setError(null);
+    } catch (err: any) {
       console.error('Failed to fetch homes:', err);
+      setError(err?.message ?? 'Failed to load homes');
     } finally {
       setLoading(false);
     }
@@ -50,7 +53,11 @@ export default function HomeListPage() {
         }
       />
 
-      {homes.length === 0 ? (
+      {error ? (
+        <div className="rounded-lg bg-danger/10 px-4 py-3 text-sm text-danger">
+          {error}
+        </div>
+      ) : homes.length === 0 ? (
         <EmptyState
           message="You haven't added any homes yet."
           action={
