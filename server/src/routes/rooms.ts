@@ -1,15 +1,12 @@
-import { Router, type NextFunction, type Response } from 'express';
+import { Router } from 'express';
 import { getDb } from '../db/connection.js';
+import { wrap } from '../middleware/asyncWrap.js';
 import { verifyHomeOwnership, verifyRoomOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-// Express 4 async wrapper — forwards rejected promises to the error handler
-const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
-
-// GET /home/:homeId - list rooms for a home with project count
+// GET /home/:homeId - list rooms for a home, always filtered by homeId to ensure correct association
 router.get('/home/:homeId', wrap(async (req, res) => {
   if (!await verifyHomeOwnership(req.params.homeId, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });

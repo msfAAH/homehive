@@ -1,67 +1,29 @@
-import { Router, type NextFunction, type Response } from 'express';
+import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getDb } from '../db/connection.js';
 import upload from '../middleware/upload.js';
+import { wrap } from '../middleware/asyncWrap.js';
+import { verifyHomeOwnership, verifyRoomOwnership, verifyProjectOwnership, verifyItemOwnership, verifyAttachmentOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
-const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
-
-async function verifyEntityOwnership(entityType: string, entityId: string, userId: number): Promise<boolean> {
-  const sql = getDb();
-  switch (entityType) {
-    case 'home': {
-      const rows = await sql`SELECT id FROM homes WHERE id = ${entityId} AND user_id = ${userId}`;
-      return rows.length > 0;
-    }
-    case 'room': {
-      const rows = await sql`SELECT r.id FROM rooms r JOIN homes h ON r.home_id = h.id WHERE r.id = ${entityId} AND h.user_id = ${userId}`;
-      return rows.length > 0;
-    }
-    case 'project': {
-      const rows = await sql`SELECT p.id FROM projects p JOIN homes h ON p.home_id = h.id WHERE p.id = ${entityId} AND h.user_id = ${userId}`;
-      return rows.length > 0;
-    }
-    case 'item': {
-      const rows = await sql`SELECT i.id FROM items i JOIN rooms r ON i.room_id = r.id JOIN homes h ON r.home_id = h.id WHERE i.id = ${entityId} AND h.user_id = ${userId}`;
-      return rows.length > 0;
-    }
-    default:
-      return false;
-  }
-}
-
-async function verifyAttachmentOwnership(attachmentId: string, userId: number): Promise<any> {
-  const sql = getDb();
-  const [att] = await sql`SELECT * FROM attachments WHERE id = ${attachmentId}`;
-  if (!att) return null;
-
-  if (att.home_id && await verifyEntityOwnership('home', String(att.home_id), userId)) return att;
-  if (att.room_id && await verifyEntityOwnership('room', String(att.room_id), userId)) return att;
-  if (att.project_id && await verifyEntityOwnership('project', String(att.project_id), userId)) return att;
-  if (att.item_id && await verifyEntityOwnership('item', String(att.item_id), userId)) return att;
-
-  return null;
-}
-
 // GET / - list attachments filtered by query params
 router.get('/', wrap(async (req, res) => {
   const { homeId, roomId, projectId, itemId } = req.query;
 
-  if (homeId && !await verifyEntityOwnership('home', homeId as string, req.userId!)) {
+  if (homeId && !await verifyHomeOwnership(homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Not found' }); return;
   }
-  if (roomId && !await verifyEntityOwnership('room', roomId as string, req.userId!)) {
+  if (roomId && !await verifyRoomOwnership(roomId as string, req.userId!)) {
     res.status(404).json({ error: 'Not found' }); return;
   }
-  if (projectId && !await verifyEntityOwnership('project', projectId as string, req.userId!)) {
+  if (projectId && !await verifyProjectOwnership(projectId as string, req.userId!)) {
     res.status(404).json({ error: 'Not found' }); return;
   }
-  if (itemId && !await verifyEntityOwnership('item', itemId as string, req.userId!)) {
+  if (itemId && !await verifyItemOwnership(itemId as string, req.userId!)) {
     res.status(404).json({ error: 'Not found' }); return;
   }
 
@@ -97,16 +59,16 @@ router.post('/', (req: AuthRequest, res, next) => {
 }, wrap(async (req, res) => {
   const { homeId, roomId, projectId, itemId, fileType, caption, photoCategory } = req.body;
 
-  if (homeId && !await verifyEntityOwnership('home', homeId, req.userId!)) {
+  if (homeId && !await verifyHomeOwnership(homeId, req.userId!)) {
     res.status(404).json({ error: 'Not found' }); return;
   }
-  if (roomId && !await verifyEntityOwnership('room', roomId, req.userId!)) {
+  if (roomId && !await verifyRoomOwnership(roomId, req.userId!)) {
     res.status(404).json({ error: 'Not found' }); return;
   }
-  if (projectId && !await verifyEntityOwnership('project', projectId, req.userId!)) {
+  if (projectId && !await verifyProjectOwnership(projectId, req.userId!)) {
     res.status(404).json({ error: 'Not found' }); return;
   }
-  if (itemId && !await verifyEntityOwnership('item', itemId, req.userId!)) {
+  if (itemId && !await verifyItemOwnership(itemId, req.userId!)) {
     res.status(404).json({ error: 'Not found' }); return;
   }
 

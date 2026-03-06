@@ -1,17 +1,12 @@
-import { Router, type Request, type NextFunction, type Response } from 'express';
+import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 import { getDb } from '../db/connection.js';
 import { generateToken, authMiddleware } from '../middleware/auth.js';
+import { wrapPublic as wrap, wrap as wrapAuth } from '../middleware/asyncWrap.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
-
-const wrap = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: Request, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
-
-const wrapAuth = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
 
 // POST /api/auth/signup - register with email/password
 router.post('/signup', wrap(async (req, res) => {

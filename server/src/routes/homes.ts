@@ -1,16 +1,15 @@
-import { Router, type NextFunction, type Response } from 'express';
+import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getDb } from '../db/connection.js';
 import upload from '../middleware/upload.js';
+import { wrap } from '../middleware/asyncWrap.js';
+import { verifyHomeOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const UPLOADS_PHOTOS = path.join(import.meta.dirname, '../../uploads/photos');
 
 const router = Router();
-
-const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
 
 // GET / - list all homes for the authenticated user
 router.get('/', wrap(async (req, res) => {
@@ -64,14 +63,15 @@ router.post('/', wrap(async (req, res) => {
 
 // PUT /:id - update home (must belong to user)
 router.put('/:id', wrap(async (req, res) => {
-  const sql = getDb();
-  const { name, address, year_built, year_bought, notes } = req.body;
-
-  const [existing] = await sql`SELECT * FROM homes WHERE id = ${req.params.id} AND user_id = ${req.userId}`;
-  if (!existing) {
+  if (!await verifyHomeOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
+
+  const sql = getDb();
+  const { name, address, year_built, year_bought, notes } = req.body;
+
+  const [existing] = await sql`SELECT * FROM homes WHERE id = ${req.params.id}`;
 
   await sql`
     UPDATE homes SET
@@ -95,9 +95,7 @@ router.put('/:id', wrap(async (req, res) => {
 
 // POST /:id/cover-photo - upload or replace cover photo
 router.post('/:id/cover-photo', upload.single('photo'), wrap(async (req, res) => {
-  const sql = getDb();
-  const [existing] = await sql`SELECT * FROM homes WHERE id = ${req.params.id} AND user_id = ${req.userId}`;
-  if (!existing) {
+  if (!await verifyHomeOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -107,6 +105,9 @@ router.post('/:id/cover-photo', upload.single('photo'), wrap(async (req, res) =>
     res.status(400).json({ error: 'No photo uploaded' });
     return;
   }
+
+  const sql = getDb();
+  const [existing] = await sql`SELECT cover_photo FROM homes WHERE id = ${req.params.id}`;
 
   if (existing.cover_photo) {
     const oldPath = path.join(UPLOADS_PHOTOS, existing.cover_photo);
@@ -126,13 +127,12 @@ router.post('/:id/cover-photo', upload.single('photo'), wrap(async (req, res) =>
 
 // DELETE /:id - delete home (cascades, must belong to user)
 router.delete('/:id', wrap(async (req, res) => {
-  const sql = getDb();
-  const [existing] = await sql`SELECT id FROM homes WHERE id = ${req.params.id} AND user_id = ${req.userId}`;
-  if (!existing) {
+  if (!await verifyHomeOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
 
+  const sql = getDb();
   await sql`DELETE FROM homes WHERE id = ${req.params.id}`;
   res.json({ message: 'Home deleted' });
 }));

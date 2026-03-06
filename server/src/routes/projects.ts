@@ -1,12 +1,10 @@
-import { Router, type NextFunction, type Response } from 'express';
+import { Router } from 'express';
 import { getDb } from '../db/connection.js';
+import { wrap } from '../middleware/asyncWrap.js';
 import { verifyHomeOwnership, verifyProjectOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
-
-const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
 
 // GET /home/:homeId - list projects for a home (with optional filters)
 router.get('/home/:homeId', wrap(async (req, res) => {

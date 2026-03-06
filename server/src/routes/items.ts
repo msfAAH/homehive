@@ -1,35 +1,13 @@
-import { Router, type NextFunction, type Response } from 'express';
+import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getDb } from '../db/connection.js';
+import { wrap } from '../middleware/asyncWrap.js';
+import { verifyRoomOwnership, verifyItemOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
-
-const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
-
-async function verifyRoomOwnership(roomId: string, userId: number): Promise<boolean> {
-  const sql = getDb();
-  const rows = await sql`
-    SELECT r.id FROM rooms r
-    JOIN homes h ON r.home_id = h.id
-    WHERE r.id = ${roomId} AND h.user_id = ${userId}
-  `;
-  return rows.length > 0;
-}
-
-async function verifyItemOwnership(itemId: string, userId: number): Promise<any> {
-  const sql = getDb();
-  const [row] = await sql`
-    SELECT i.* FROM items i
-    JOIN rooms r ON i.room_id = r.id
-    JOIN homes h ON r.home_id = h.id
-    WHERE i.id = ${itemId} AND h.user_id = ${userId}
-  `;
-  return row ?? null;
-}
 
 // GET /room/:roomId - list items for a room with their attachments
 router.get('/room/:roomId', wrap(async (req, res) => {

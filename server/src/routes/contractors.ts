@@ -1,23 +1,10 @@
-import { Router, type NextFunction, type Response } from 'express';
+import { Router } from 'express';
 import { getDb } from '../db/connection.js';
-import { verifyHomeOwnership, verifyProjectOwnership } from '../db/ownership.js';
+import { wrap } from '../middleware/asyncWrap.js';
+import { verifyHomeOwnership, verifyProjectOwnership, verifyContractorOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
-
-const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
-
-async function verifyContractorOwnership(contractorId: string, userId: number): Promise<Record<string, unknown> | null> {
-  const sql = getDb();
-  const [row] = await sql`
-    SELECT c.* FROM contractors c
-    JOIN projects p ON c.project_id = p.id
-    JOIN homes h ON p.home_id = h.id
-    WHERE c.id = ${contractorId} AND h.user_id = ${userId}
-  `;
-  return row ?? null;
-}
 
 // GET /home/:homeId - list all contractors for a home (across all its projects)
 router.get('/home/:homeId', wrap(async (req, res) => {
