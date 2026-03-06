@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type NextFunction, type Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getDb } from '../db/connection.js';
@@ -9,8 +9,11 @@ const UPLOADS_PHOTOS = path.join(import.meta.dirname, '../../uploads/photos');
 
 const router = Router();
 
+const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
+
 // GET / - list all homes for the authenticated user
-router.get('/', async (req: AuthRequest, res) => {
+router.get('/', wrap(async (req, res) => {
   const sql = getDb();
   const homes = await sql`
     SELECT h.*,
@@ -21,10 +24,10 @@ router.get('/', async (req: AuthRequest, res) => {
     ORDER BY h.created_at DESC
   `;
   res.json(homes);
-});
+}));
 
 // GET /:id - get single home (must belong to user)
-router.get('/:id', async (req: AuthRequest, res) => {
+router.get('/:id', wrap(async (req, res) => {
   const sql = getDb();
   const [home] = await sql`
     SELECT h.*,
@@ -39,10 +42,10 @@ router.get('/:id', async (req: AuthRequest, res) => {
     return;
   }
   res.json(home);
-});
+}));
 
 // POST / - create home for authenticated user
-router.post('/', async (req: AuthRequest, res) => {
+router.post('/', wrap(async (req, res) => {
   const sql = getDb();
   const { name, address, year_built, year_bought, notes } = req.body;
 
@@ -57,10 +60,10 @@ router.post('/', async (req: AuthRequest, res) => {
     RETURNING *
   `;
   res.status(201).json(home);
-});
+}));
 
 // PUT /:id - update home (must belong to user)
-router.put('/:id', async (req: AuthRequest, res) => {
+router.put('/:id', wrap(async (req, res) => {
   const sql = getDb();
   const { name, address, year_built, year_bought, notes } = req.body;
 
@@ -88,10 +91,10 @@ router.put('/:id', async (req: AuthRequest, res) => {
     FROM homes h WHERE h.id = ${req.params.id}
   `;
   res.json(home);
-});
+}));
 
 // POST /:id/cover-photo - upload or replace cover photo
-router.post('/:id/cover-photo', upload.single('photo'), async (req: AuthRequest, res) => {
+router.post('/:id/cover-photo', upload.single('photo'), wrap(async (req, res) => {
   const sql = getDb();
   const [existing] = await sql`SELECT * FROM homes WHERE id = ${req.params.id} AND user_id = ${req.userId}`;
   if (!existing) {
@@ -119,10 +122,10 @@ router.post('/:id/cover-photo', upload.single('photo'), async (req: AuthRequest,
     FROM homes h WHERE h.id = ${req.params.id}
   `;
   res.json(home);
-});
+}));
 
 // DELETE /:id - delete home (cascades, must belong to user)
-router.delete('/:id', async (req: AuthRequest, res) => {
+router.delete('/:id', wrap(async (req, res) => {
   const sql = getDb();
   const [existing] = await sql`SELECT id FROM homes WHERE id = ${req.params.id} AND user_id = ${req.userId}`;
   if (!existing) {
@@ -132,6 +135,6 @@ router.delete('/:id', async (req: AuthRequest, res) => {
 
   await sql`DELETE FROM homes WHERE id = ${req.params.id}`;
   res.json({ message: 'Home deleted' });
-});
+}));
 
 export default router;

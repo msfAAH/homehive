@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express from 'express';
+import express, { type Request, type Response, type NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
 import { initDb } from './db/connection.js';
@@ -51,6 +51,12 @@ app.use('/api/attachments', authMiddleware, attachmentsRouter);
 app.use('/api/contractors', authMiddleware, contractorsRouter);
 app.use('/api/items', authMiddleware, itemsRouter);
 app.use('/api/extract', authMiddleware, extractRouter);
+
+// Global error handler — catches unhandled async route errors (Express 4 doesn't do this)
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled route error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 // Initialize database and start server
 async function start() {

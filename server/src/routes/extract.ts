@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type NextFunction, type Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
@@ -8,6 +8,9 @@ import { verifyProjectOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
+
+const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
 function getClient(): Anthropic {
@@ -89,7 +92,7 @@ function parseExtractResponse(responseText: string): { warrantyInfo: string; mai
 }
 
 // POST /extract/item/:id
-router.post('/item/:id', async (req: AuthRequest, res) => {
+router.post('/item/:id', wrap(async (req, res) => {
   const sql = getDb();
   const item = await verifyItemOwnership(req.params.id, req.userId!);
   if (!item) { res.status(404).json({ error: 'Item not found' }); return; }
@@ -124,10 +127,10 @@ router.post('/item/:id', async (req: AuthRequest, res) => {
     const message = err instanceof Error ? err.message : 'Extraction failed';
     res.status(500).json({ error: message });
   }
-});
+}));
 
 // POST /extract/project/:id
-router.post('/project/:id', async (req: AuthRequest, res) => {
+router.post('/project/:id', wrap(async (req, res) => {
   const sql = getDb();
   const project = await verifyProjectOwnership(req.params.id, req.userId!);
   if (!project) { res.status(404).json({ error: 'Project not found' }); return; }
@@ -162,26 +165,26 @@ router.post('/project/:id', async (req: AuthRequest, res) => {
     const message = err instanceof Error ? err.message : 'Extraction failed';
     res.status(500).json({ error: message });
   }
-});
+}));
 
 // DELETE /extract/item/:id - clear extracted info
-router.delete('/item/:id', async (req: AuthRequest, res) => {
+router.delete('/item/:id', wrap(async (req, res) => {
   if (!await verifyItemOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Item not found' }); return;
   }
   const sql = getDb();
   await sql`UPDATE items SET warranty_info = NULL, maintenance_info = NULL, updated_at = NOW() WHERE id = ${req.params.id}`;
   res.json({ message: 'Cleared' });
-});
+}));
 
 // DELETE /extract/project/:id - clear extracted info
-router.delete('/project/:id', async (req: AuthRequest, res) => {
+router.delete('/project/:id', wrap(async (req, res) => {
   if (!await verifyProjectOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Project not found' }); return;
   }
   const sql = getDb();
   await sql`UPDATE projects SET warranty_info = NULL, maintenance_info = NULL, updated_at = NOW() WHERE id = ${req.params.id}`;
   res.json({ message: 'Cleared' });
-});
+}));
 
 export default router;
