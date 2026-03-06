@@ -1,12 +1,15 @@
-import { Router } from 'express';
+import { Router, type NextFunction, type Response } from 'express';
 import { getDb } from '../db/connection.js';
 import { verifyHomeOwnership, verifyProjectOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
+const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
+
 // GET /home/:homeId - list projects for a home (with optional filters)
-router.get('/home/:homeId', async (req: AuthRequest, res) => {
+router.get('/home/:homeId', wrap(async (req, res) => {
   if (!await verifyHomeOwnership(req.params.homeId, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
@@ -30,10 +33,10 @@ router.get('/home/:homeId', async (req: AuthRequest, res) => {
     ORDER BY p.created_at DESC
   `;
   res.json(projects);
-});
+}));
 
 // GET /:id - get single project with line items and attachments
-router.get('/:id', async (req: AuthRequest, res) => {
+router.get('/:id', wrap(async (req, res) => {
   if (!await verifyProjectOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
@@ -54,10 +57,10 @@ router.get('/:id', async (req: AuthRequest, res) => {
   ]);
 
   res.json({ ...project[0], line_items: lineItems, attachments, contractors });
-});
+}));
 
 // POST /home/:homeId - create project
-router.post('/home/:homeId', async (req: AuthRequest, res) => {
+router.post('/home/:homeId', wrap(async (req, res) => {
   if (!await verifyHomeOwnership(req.params.homeId, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
@@ -77,10 +80,10 @@ router.post('/home/:homeId', async (req: AuthRequest, res) => {
     RETURNING *
   `;
   res.status(201).json(project);
-});
+}));
 
 // PUT /:id - update project
-router.put('/:id', async (req: AuthRequest, res) => {
+router.put('/:id', wrap(async (req, res) => {
   const existing = await verifyProjectOwnership(req.params.id, req.userId!);
   if (!existing) {
     res.status(404).json({ error: 'Project not found' });
@@ -106,10 +109,10 @@ router.put('/:id', async (req: AuthRequest, res) => {
 
   const [project] = await sql`SELECT * FROM projects WHERE id = ${req.params.id}`;
   res.json(project);
-});
+}));
 
 // DELETE /:id - delete project
-router.delete('/:id', async (req: AuthRequest, res) => {
+router.delete('/:id', wrap(async (req, res) => {
   if (!await verifyProjectOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
@@ -118,6 +121,6 @@ router.delete('/:id', async (req: AuthRequest, res) => {
   const sql = getDb();
   await sql`DELETE FROM projects WHERE id = ${req.params.id}`;
   res.json({ message: 'Project deleted' });
-});
+}));
 
 export default router;

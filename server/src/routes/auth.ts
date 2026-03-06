@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type NextFunction, type Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 import { getDb } from '../db/connection.js';
@@ -7,8 +7,14 @@ import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
+const wrap = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) =>
+  (req: Request, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
+
+const wrapAuth = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
+
 // POST /api/auth/signup - register with email/password
-router.post('/signup', async (req, res) => {
+router.post('/signup', wrap(async (req, res) => {
   const sql = getDb();
   const { email, password, first_name, last_name } = req.body;
 
@@ -36,10 +42,10 @@ router.post('/signup', async (req, res) => {
 
   const token = generateToken(user.id);
   res.status(201).json({ token, user });
-});
+}));
 
 // POST /api/auth/login - login with email/password
-router.post('/login', async (req, res) => {
+router.post('/login', wrap(async (req, res) => {
   const sql = getDb();
   const { email, password } = req.body;
 
@@ -72,10 +78,10 @@ router.post('/login', async (req, res) => {
       created_at: user.created_at,
     },
   });
-});
+}));
 
 // POST /api/auth/google - authenticate with Google
-router.post('/google', async (req, res) => {
+router.post('/google', wrap(async (req, res) => {
   const { credential } = req.body;
   if (!credential) {
     res.status(400).json({ error: 'Google credential is required' });
@@ -131,10 +137,10 @@ router.post('/google', async (req, res) => {
     console.error('Google auth error:', err);
     res.status(401).json({ error: 'Google authentication failed' });
   }
-});
+}));
 
 // GET /api/auth/me - get current user
-router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/me', authMiddleware, wrapAuth(async (req, res) => {
   const sql = getDb();
   const [user] = await sql`SELECT id, email, first_name, last_name, avatar_url, created_at FROM users WHERE id = ${req.userId}`;
 
@@ -144,6 +150,6 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
   }
 
   res.json(user);
-});
+}));
 
 export default router;

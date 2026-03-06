@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type NextFunction, type Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { getDb } from '../db/connection.js';
@@ -7,6 +7,9 @@ import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
+
+const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
 
 async function verifyEntityOwnership(entityType: string, entityId: string, userId: number): Promise<boolean> {
   const sql = getDb();
@@ -46,7 +49,7 @@ async function verifyAttachmentOwnership(attachmentId: string, userId: number): 
 }
 
 // GET / - list attachments filtered by query params
-router.get('/', async (req: AuthRequest, res) => {
+router.get('/', wrap(async (req, res) => {
   const { homeId, roomId, projectId, itemId } = req.query;
 
   if (homeId && !await verifyEntityOwnership('home', homeId as string, req.userId!)) {
@@ -77,7 +80,7 @@ router.get('/', async (req: AuthRequest, res) => {
     ORDER BY created_at DESC
   `;
   res.json(attachments);
-});
+}));
 
 // POST / - upload file(s)
 router.post('/', (req: AuthRequest, res, next) => {
@@ -91,7 +94,7 @@ router.post('/', (req: AuthRequest, res, next) => {
     }
     next();
   });
-}, async (req: AuthRequest, res) => {
+}, wrap(async (req, res) => {
   const { homeId, roomId, projectId, itemId, fileType, caption, photoCategory } = req.body;
 
   if (homeId && !await verifyEntityOwnership('home', homeId, req.userId!)) {
@@ -125,10 +128,10 @@ router.post('/', (req: AuthRequest, res, next) => {
   }
 
   res.status(201).json(attachments);
-});
+}));
 
 // DELETE /:id - delete attachment and remove file from disk
-router.delete('/:id', async (req: AuthRequest, res) => {
+router.delete('/:id', wrap(async (req, res) => {
   const attachment = await verifyAttachmentOwnership(req.params.id, req.userId!);
   if (!attachment) {
     res.status(404).json({ error: 'Attachment not found' });
@@ -144,6 +147,6 @@ router.delete('/:id', async (req: AuthRequest, res) => {
   const sql = getDb();
   await sql`DELETE FROM attachments WHERE id = ${req.params.id}`;
   res.json({ message: 'Attachment deleted' });
-});
+}));
 
 export default router;

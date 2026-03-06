@@ -1,9 +1,12 @@
-import { Router } from 'express';
+import { Router, type NextFunction, type Response } from 'express';
 import { getDb } from '../db/connection.js';
 import { verifyHomeOwnership, verifyProjectOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
+
+const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
+  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
 
 async function verifyContractorOwnership(contractorId: string, userId: number): Promise<Record<string, unknown> | null> {
   const sql = getDb();
@@ -17,7 +20,7 @@ async function verifyContractorOwnership(contractorId: string, userId: number): 
 }
 
 // GET /home/:homeId - list all contractors for a home (across all its projects)
-router.get('/home/:homeId', async (req: AuthRequest, res) => {
+router.get('/home/:homeId', wrap(async (req, res) => {
   if (!await verifyHomeOwnership(req.params.homeId, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
@@ -32,10 +35,10 @@ router.get('/home/:homeId', async (req: AuthRequest, res) => {
     ORDER BY p.name ASC, c.company_name ASC
   `;
   res.json(contractors);
-});
+}));
 
 // GET /project/:projectId - list contractors for a project
-router.get('/project/:projectId', async (req: AuthRequest, res) => {
+router.get('/project/:projectId', wrap(async (req, res) => {
   if (!await verifyProjectOwnership(req.params.projectId, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
@@ -44,10 +47,10 @@ router.get('/project/:projectId', async (req: AuthRequest, res) => {
   const sql = getDb();
   const contractors = await sql`SELECT * FROM contractors WHERE project_id = ${req.params.projectId} ORDER BY created_at ASC`;
   res.json(contractors);
-});
+}));
 
 // POST /project/:projectId - add contractor
-router.post('/project/:projectId', async (req: AuthRequest, res) => {
+router.post('/project/:projectId', wrap(async (req, res) => {
   if (!await verifyProjectOwnership(req.params.projectId, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
@@ -67,10 +70,10 @@ router.post('/project/:projectId', async (req: AuthRequest, res) => {
     RETURNING *
   `;
   res.status(201).json(contractor);
-});
+}));
 
 // PUT /:id - update contractor
-router.put('/:id', async (req: AuthRequest, res) => {
+router.put('/:id', wrap(async (req, res) => {
   const existing = await verifyContractorOwnership(req.params.id, req.userId!);
   if (!existing) {
     res.status(404).json({ error: 'Contractor not found' });
@@ -94,10 +97,10 @@ router.put('/:id', async (req: AuthRequest, res) => {
 
   const [contractor] = await sql`SELECT * FROM contractors WHERE id = ${req.params.id}`;
   res.json(contractor);
-});
+}));
 
 // DELETE /:id - delete contractor
-router.delete('/:id', async (req: AuthRequest, res) => {
+router.delete('/:id', wrap(async (req, res) => {
   if (!await verifyContractorOwnership(req.params.id, req.userId!)) {
     res.status(404).json({ error: 'Contractor not found' });
     return;
@@ -106,6 +109,6 @@ router.delete('/:id', async (req: AuthRequest, res) => {
   const sql = getDb();
   await sql`DELETE FROM contractors WHERE id = ${req.params.id}`;
   res.json({ message: 'Contractor deleted' });
-});
+}));
 
 export default router;
