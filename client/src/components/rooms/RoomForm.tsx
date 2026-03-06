@@ -16,64 +16,64 @@ const floorPresets = [
   'Basement', 'Attic', 'Garage', 'Exterior',
 ];
 
-const ROOM_ICONS: { emoji: string; label: string }[] = [
-  { emoji: '🛋️', label: 'Living Room' },
-  { emoji: '🛏️', label: 'Bedroom' },
-  { emoji: '🍳', label: 'Kitchen' },
-  { emoji: '🛁', label: 'Bathroom' },
-  { emoji: '🚗', label: 'Garage' },
-  { emoji: '🌳', label: 'Backyard' },
-  { emoji: '🍽️', label: 'Dining Room' },
-  { emoji: '💻', label: 'Office' },
-  { emoji: '📦', label: 'Basement' },
-  { emoji: '🧺', label: 'Laundry' },
-  { emoji: '☀️', label: 'Patio / Deck' },
-  { emoji: '🏋️', label: 'Gym' },
-  { emoji: '🏊', label: 'Pool' },
-  { emoji: '🍼', label: 'Nursery' },
-  { emoji: '🚪', label: 'Hallway' },
-  { emoji: '📚', label: 'Library' },
-  { emoji: '🎮', label: 'Game Room' },
-  { emoji: '🎨', label: 'Art Studio' },
-  { emoji: '🌿', label: 'Garden' },
-  { emoji: '🔧', label: 'Workshop' },
-  { emoji: '🧸', label: 'Playroom' },
-  { emoji: '👟', label: 'Mudroom' },
-  { emoji: '🪟', label: 'Sunroom' },
-  { emoji: '🏠', label: 'Other' },
+const ROOM_ICONS: { icon: string; label: string }[] = [
+  { icon: 'weekend', label: 'Living Room' },
+  { icon: 'bed', label: 'Bedroom' },
+  { icon: 'cooking', label: 'Kitchen' },
+  { icon: 'bathtub', label: 'Bathroom' },
+  { icon: 'garage', label: 'Garage' },
+  { icon: 'park', label: 'Backyard' },
+  { icon: 'dining', label: 'Dining Room' },
+  { icon: 'desktop_windows', label: 'Office' },
+  { icon: 'warehouse', label: 'Basement' },
+  { icon: 'local_laundry_service', label: 'Laundry' },
+  { icon: 'deck', label: 'Patio / Deck' },
+  { icon: 'fitness_center', label: 'Gym' },
+  { icon: 'pool', label: 'Pool' },
+  { icon: 'crib', label: 'Nursery' },
+  { icon: 'door_front', label: 'Hallway' },
+  { icon: 'menu_book', label: 'Library' },
+  { icon: 'sports_esports', label: 'Game Room' },
+  { icon: 'palette', label: 'Art Studio' },
+  { icon: 'yard', label: 'Garden' },
+  { icon: 'construction', label: 'Workshop' },
+  { icon: 'toys', label: 'Playroom' },
+  { icon: 'footprint', label: 'Mudroom' },
+  { icon: 'wb_sunny', label: 'Sunroom' },
+  { icon: 'home', label: 'Other' },
 ];
 
 // Ordered from most specific to least — first match wins
-const ICON_KEYWORDS: { keywords: string[]; emoji: string }[] = [
-  { keywords: ['living'], emoji: '🛋️' },
-  { keywords: ['master', 'primary', 'guest', 'bedroom', 'bed'], emoji: '🛏️' },
-  { keywords: ['kitchen'], emoji: '🍳' },
-  { keywords: ['bath', 'powder', 'toilet', 'washroom', 'restroom', 'wc'], emoji: '🛁' },
-  { keywords: ['garage'], emoji: '🚗' },
-  { keywords: ['backyard', 'back yard', 'yard'], emoji: '🌳' },
-  { keywords: ['dining'], emoji: '🍽️' },
-  { keywords: ['office', 'study', 'den'], emoji: '💻' },
-  { keywords: ['basement', 'cellar'], emoji: '📦' },
-  { keywords: ['laundry', 'utility'], emoji: '🧺' },
-  { keywords: ['patio', 'deck', 'terrace'], emoji: '☀️' },
-  { keywords: ['gym', 'fitness', 'exercise', 'workout'], emoji: '🏋️' },
-  { keywords: ['pool'], emoji: '🏊' },
-  { keywords: ['nursery', 'baby'], emoji: '🍼' },
-  { keywords: ['hallway', 'hall', 'foyer', 'entry', 'entryway'], emoji: '🚪' },
-  { keywords: ['library'], emoji: '📚' },
-  { keywords: ['game', 'media', 'theater', 'theatre', 'cinema', 'entertainment'], emoji: '🎮' },
-  { keywords: ['art', 'studio', 'craft'], emoji: '🎨' },
-  { keywords: ['garden'], emoji: '🌿' },
-  { keywords: ['workshop', 'shop', 'tool'], emoji: '🔧' },
-  { keywords: ['playroom', 'play room'], emoji: '🧸' },
-  { keywords: ['mud', 'mudroom'], emoji: '👟' },
-  { keywords: ['sunroom', 'sun room', 'solarium'], emoji: '🪟' },
+const ICON_KEYWORDS: { keywords: string[]; icon: string }[] = [
+  { keywords: ['living'], icon: 'weekend' },
+  { keywords: ['master', 'primary', 'guest', 'bedroom', 'bed'], icon: 'bed' },
+  { keywords: ['kitchen'], icon: 'cooking' },
+  { keywords: ['bath', 'powder', 'toilet', 'washroom', 'restroom', 'wc'], icon: 'bathtub' },
+  { keywords: ['garage'], icon: 'garage' },
+  { keywords: ['backyard', 'back yard', 'yard'], icon: 'park' },
+  { keywords: ['dining'], icon: 'dining' },
+  { keywords: ['office', 'study', 'den'], icon: 'desktop_windows' },
+  { keywords: ['basement', 'cellar'], icon: 'warehouse' },
+  { keywords: ['laundry', 'utility'], icon: 'local_laundry_service' },
+  { keywords: ['patio', 'deck', 'terrace'], icon: 'deck' },
+  { keywords: ['gym', 'fitness', 'exercise', 'workout'], icon: 'fitness_center' },
+  { keywords: ['pool'], icon: 'pool' },
+  { keywords: ['nursery', 'baby'], icon: 'crib' },
+  { keywords: ['hallway', 'hall', 'foyer', 'entry', 'entryway'], icon: 'door_front' },
+  { keywords: ['library'], icon: 'menu_book' },
+  { keywords: ['game', 'media', 'theater', 'theatre', 'cinema', 'entertainment'], icon: 'sports_esports' },
+  { keywords: ['art', 'studio', 'craft'], icon: 'palette' },
+  { keywords: ['garden'], icon: 'yard' },
+  { keywords: ['workshop', 'shop', 'tool'], icon: 'construction' },
+  { keywords: ['playroom', 'play room'], icon: 'toys' },
+  { keywords: ['mud', 'mudroom'], icon: 'footprint' },
+  { keywords: ['sunroom', 'sun room', 'solarium'], icon: 'wb_sunny' },
 ];
 
 function autoDetectIcon(name: string): string {
   const lower = name.toLowerCase();
-  for (const { keywords, emoji } of ICON_KEYWORDS) {
-    if (keywords.some((kw) => lower.includes(kw))) return emoji;
+  for (const { keywords, icon } of ICON_KEYWORDS) {
+    if (keywords.some((kw) => lower.includes(kw))) return icon;
   }
   return '';
 }
@@ -94,12 +94,12 @@ export default function RoomForm({ homeId, room, onSave, onCancel }: RoomFormPro
     }
   };
 
-  const handleIconSelect = (emoji: string) => {
-    const next = emoji === icon ? '' : emoji;
+  const handleIconSelect = (selectedIcon: string) => {
+    const next = selectedIcon === icon ? '' : selectedIcon;
     setIcon(next);
     setManualIcon(next !== '');
     if (next !== '' && !name.trim()) {
-      const iconEntry = ROOM_ICONS.find((r) => r.emoji === next);
+      const iconEntry = ROOM_ICONS.find((r) => r.icon === next);
       if (iconEntry) setName(iconEntry.label);
     }
   };
@@ -154,12 +154,12 @@ export default function RoomForm({ homeId, room, onSave, onCancel }: RoomFormPro
 
       {/* Icon Picker */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-text-muted">
+        <label className="text-sm font-medium text-slate">
           Icon
           {icon && (
             <button
               type="button"
-              className="ml-2 text-xs text-text-muted underline hover:text-danger"
+              className="ml-2 text-xs text-slate underline hover:text-danger"
               onClick={handleIconClear}
             >
               clear
@@ -167,27 +167,27 @@ export default function RoomForm({ homeId, room, onSave, onCancel }: RoomFormPro
           )}
         </label>
         <div className="grid grid-cols-6 gap-1.5">
-          {ROOM_ICONS.map(({ emoji, label }) => (
+          {ROOM_ICONS.map(({ icon: iconName, label }) => (
             <button
-              key={emoji}
+              key={iconName}
               type="button"
               title={label}
-              onClick={() => handleIconSelect(emoji)}
-              className={`flex flex-col items-center justify-center rounded-lg border p-2 text-xl transition-colors ${
-                icon === emoji
+              onClick={() => handleIconSelect(iconName)}
+              className={`flex flex-col items-center justify-center rounded-lg border p-2 transition-colors ${
+                icon === iconName
                   ? 'border-primary bg-primary/10'
                   : 'border-border hover:border-primary/50 hover:bg-surface-dark'
               }`}
             >
-              <span>{emoji}</span>
-              <span className="mt-0.5 text-[9px] leading-tight text-text-muted text-center">{label}</span>
+              <span className="material-symbols-rounded text-[22px] text-navy">{iconName}</span>
+              <span className="mt-0.5 text-[9px] leading-tight text-slate text-center">{label}</span>
             </button>
           ))}
         </div>
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="room-floor" className="text-sm font-medium text-text-muted">
+        <label htmlFor="room-floor" className="text-sm font-medium text-slate">
           Floor
         </label>
         <input
@@ -206,7 +206,7 @@ export default function RoomForm({ homeId, room, onSave, onCancel }: RoomFormPro
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="room-notes" className="text-sm font-medium text-text-muted">
+        <label htmlFor="room-notes" className="text-sm font-medium text-slate">
           Notes
         </label>
         <textarea
