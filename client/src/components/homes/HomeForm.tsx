@@ -105,7 +105,7 @@ export default function HomeForm({ home, onSave, onCancel }: HomeFormProps) {
         </label>
         <textarea
           id="home-notes"
-          className="w-full rounded-lg border border-border px-3 py-2 min-h-[80px] bg-white text-text focus:outline-primary focus:ring-1 focus:ring-primary"
+          className="w-full rounded-lg border border-border px-3 py-2 min-h-[80px] bg-warm-white text-text focus:outline-primary focus:ring-1 focus:ring-primary"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Any notes about this home..."

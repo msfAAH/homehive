@@ -218,7 +218,7 @@ export default function HomeDetailPage() {
         )}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-text">{home.name}</h1>
+            <h1 className="font-display text-2xl font-semibold text-navy">{home.name}</h1>
             {home.address && <p className="mt-1 text-text-muted">{home.address}</p>}
           </div>
           <div className="flex gap-2">
@@ -647,7 +647,7 @@ export default function HomeDetailPage() {
             </label>
             <textarea
               id="proj-desc"
-              className="w-full rounded-lg border border-border px-3 py-2 min-h-[80px] bg-white text-text focus:outline-primary focus:ring-1 focus:ring-primary"
+              className="w-full rounded-lg border border-border px-3 py-2 min-h-[80px] bg-warm-white text-text focus:outline-primary focus:ring-1 focus:ring-primary"
               value={projDesc}
               onChange={(e) => setProjDesc(e.target.value)}
               placeholder="Describe the project..."

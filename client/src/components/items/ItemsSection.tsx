@@ -61,7 +61,7 @@ function ItemForm({ initial, onSave, onCancel }: ItemFormProps) {
     try { await onSave(form); } finally { setSaving(false); }
   };
 
-  const inputClass = 'w-full rounded-lg border border-border px-3 py-2 text-sm bg-white text-text focus:outline-primary focus:ring-1 focus:ring-primary';
+  const inputClass = 'w-full rounded-lg border border-border px-3 py-2 text-sm bg-warm-white text-text focus:outline-primary focus:ring-1 focus:ring-primary';
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">

@@ -193,7 +193,7 @@ export default function RoomForm({ homeId, room, onSave, onCancel }: RoomFormPro
         <input
           id="room-floor"
           list="floor-options"
-          className="w-full rounded-lg border border-border px-3 py-2 min-h-[44px] bg-white text-text focus:outline-primary focus:ring-1 focus:ring-primary"
+          className="w-full rounded-lg border border-border px-3 py-2 min-h-[44px] bg-warm-white text-text focus:outline-primary focus:ring-1 focus:ring-primary"
           value={floor}
           onChange={(e) => setFloor(e.target.value)}
           placeholder="Select or type a floor..."
@@ -211,7 +211,7 @@ export default function RoomForm({ homeId, room, onSave, onCancel }: RoomFormPro
         </label>
         <textarea
           id="room-notes"
-          className="w-full rounded-lg border border-border px-3 py-2 min-h-[80px] bg-white text-text focus:outline-primary focus:ring-1 focus:ring-primary"
+          className="w-full rounded-lg border border-border px-3 py-2 min-h-[80px] bg-warm-white text-text focus:outline-primary focus:ring-1 focus:ring-primary"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Any notes about this room..."

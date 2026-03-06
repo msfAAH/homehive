@@ -1,9 +1,9 @@
 import type { Project } from '../../types';
 
 const STATUS_COLORS: Record<string, string> = {
-  planned: 'bg-gray-100 text-gray-700',
-  in_progress: 'bg-amber-100 text-amber-700',
-  completed: 'bg-green-100 text-green-700',
+  planned: 'bg-sand/30 text-slate',
+  in_progress: 'bg-primary/20 text-primary-dark',
+  completed: 'bg-success/20 text-success',
 };
 
 const STATUS_LABELS: Record<string, string> = {
