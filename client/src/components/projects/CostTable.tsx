@@ -3,8 +3,8 @@ import Button from '../ui/Button';
 import { apiPost, apiPut, apiDelete } from '../../api/client';
 import type { LineItem } from '../../types';
 
-const fmt = (n: number) =>
-  '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n: number | string) =>
+  '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 interface CostTableProps {
   projectId: number;
@@ -34,7 +34,7 @@ export default function CostTable({ projectId, lineItems, estimatedCost, onUpdat
   const [editData, setEditData] = useState<EditRow>(emptyRow);
   const [saving, setSaving] = useState(false);
 
-  const actualTotal = lineItems.reduce((sum, li) => sum + li.total_cost, 0);
+  const actualTotal = lineItems.reduce((sum, li) => sum + Number(li.total_cost), 0);
 
   const startEdit = (item: LineItem) => {
     setEditingId(item.id);

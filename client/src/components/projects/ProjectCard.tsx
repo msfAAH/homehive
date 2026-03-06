@@ -2,8 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../ui/Card';
 import type { Project } from '../../types';
 
-const fmt = (n: number) =>
-  '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n: number | string) =>
+  '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const statusStyles: Record<string, string> = {
   planned: 'bg-gray-100 text-gray-700',
@@ -42,10 +42,10 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       )}
 
       <div className="mt-3 flex flex-wrap gap-4 text-sm text-text-muted">
-        {project.estimated_cost > 0 && (
+        {Number(project.estimated_cost) > 0 && (
           <span>Estimated: {fmt(project.estimated_cost)}</span>
         )}
-        {project.actual_cost > 0 && (
+        {Number(project.actual_cost) > 0 && (
           <span>Actual: {fmt(project.actual_cost)}</span>
         )}
       </div>
