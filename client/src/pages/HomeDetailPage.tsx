@@ -73,15 +73,18 @@ export default function HomeDetailPage() {
 
   const fetchAll = async () => {
     try {
-      const [homeData, roomsData, projectsData, categoriesData, attachmentsData, contractorsData] = await Promise.all([
-        apiGet<Home>(`/homes/${id}`),
-        apiGet<Room[]>(`/rooms/home/${id}`),
-        apiGet<Project[]>(`/projects/home/${id}`),
-        apiGet<Category[]>('/categories'),
-        apiGet<Attachment[]>(`/attachments?homeId=${id}`),
-        apiGet<(Contractor & { project_name: string; project_id: number })[]>(`/contractors/home/${id}`),
-      ]);
+      // Fetch the home first — if this fails, there's nothing to show.
+      const homeData = await apiGet<Home>(`/homes/${id}`);
       setHome(homeData);
+
+      // Fetch secondary data in parallel; failures here don't hide the home.
+      const [roomsData, projectsData, categoriesData, attachmentsData, contractorsData] = await Promise.all([
+        apiGet<Room[]>(`/rooms/home/${id}`).catch(() => [] as Room[]),
+        apiGet<Project[]>(`/projects/home/${id}`).catch(() => [] as Project[]),
+        apiGet<Category[]>('/categories').catch(() => [] as Category[]),
+        apiGet<Attachment[]>(`/attachments?homeId=${id}`).catch(() => [] as Attachment[]),
+        apiGet<(Contractor & { project_name: string; project_id: number })[]>(`/contractors/home/${id}`).catch(() => [] as (Contractor & { project_name: string; project_id: number })[]),
+      ]);
       setRooms(roomsData);
       setProjects(projectsData);
       setCategories(categoriesData);
