@@ -29,13 +29,16 @@ export default function RoomDetailPage() {
 
   const fetchAll = async () => {
     try {
-      const [roomData, projectsData, attachmentsData, itemsData] = await Promise.all([
-        apiGet<Room>(`/rooms/${rId}`),
-        apiGet<Project[]>(`/projects/home/${hId}`),
-        apiGet<Attachment[]>(`/attachments?roomId=${rId}`),
-        apiGet<Item[]>(`/items/room/${rId}`),
-      ]);
+      // Fetch the room first — if this fails, there's nothing to show.
+      const roomData = await apiGet<Room>(`/rooms/${rId}`);
       setRoom(roomData);
+
+      // Fetch secondary data in parallel; failures here don't hide the room.
+      const [projectsData, attachmentsData, itemsData] = await Promise.all([
+        apiGet<Project[]>(`/projects/home/${hId}`).catch(() => [] as Project[]),
+        apiGet<Attachment[]>(`/attachments?roomId=${rId}`).catch(() => [] as Attachment[]),
+        apiGet<Item[]>(`/items/room/${rId}`).catch(() => [] as Item[]),
+      ]);
       setProjects(projectsData.filter((p) => p.room_id === rId));
       setAttachments(attachmentsData);
       setItems(itemsData);
