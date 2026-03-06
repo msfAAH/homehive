@@ -13,29 +13,8 @@ import Select from '../components/ui/Select';
 import AttachmentGrid from '../components/attachments/AttachmentGrid';
 import AttachmentUpload from '../components/attachments/AttachmentUpload';
 import { apiGet, apiPost, apiDelete, uploadsUrl } from '../api/client';
+import { StatusBadge, formatCost } from '../components/projects/ProjectStatus';
 import type { Home, Room, Project, Category, Attachment, Contractor } from '../types';
-
-function formatCost(value: number): string {
-  return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-
-function StatusBadge({ status }: { status: Project['status'] }) {
-  const colors: Record<string, string> = {
-    planned: 'bg-gray-100 text-gray-700',
-    in_progress: 'bg-amber-100 text-amber-700',
-    completed: 'bg-green-100 text-green-700',
-  };
-  const labels: Record<string, string> = {
-    planned: 'Planned',
-    in_progress: 'In Progress',
-    completed: 'Completed',
-  };
-  return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status]}`}>
-      {labels[status]}
-    </span>
-  );
-}
 
 export default function HomeDetailPage() {
   const { homeId } = useParams<{ homeId: string }>();

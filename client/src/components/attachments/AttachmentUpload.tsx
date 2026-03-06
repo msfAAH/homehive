@@ -40,9 +40,9 @@ export default function AttachmentUpload({ entityType, entityId, onUpload, photo
         await apiUpload<Attachment>('/attachments', formData);
       }
       onUpload();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Try to extract a clean message from the error
-      let msg: string = err?.message ?? 'Upload failed';
+      let msg: string = err instanceof Error ? err.message : 'Upload failed';
       try {
         const parsed = JSON.parse(msg);
         if (parsed?.error) msg = parsed.error;

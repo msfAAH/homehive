@@ -30,8 +30,8 @@ export default function WarrantyMaintenance({
     try {
       await apiPost(`/extract/${entityType}/${entityId}`, {});
       onUpdate();
-    } catch (err: any) {
-      setError(err.message ?? 'Extraction failed');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Extraction failed');
     } finally {
       setExtracting(false);
     }
@@ -42,8 +42,8 @@ export default function WarrantyMaintenance({
     try {
       await apiDelete(`/extract/${entityType}/${entityId}`);
       onUpdate();
-    } catch (err: any) {
-      setError(err.message ?? 'Clear failed');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Clear failed');
     }
   };
 

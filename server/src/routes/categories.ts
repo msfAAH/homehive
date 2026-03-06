@@ -25,8 +25,8 @@ router.post('/', async (req, res) => {
       INSERT INTO project_categories (name) VALUES (${name.trim()}) RETURNING *
     `;
     res.status(201).json(category);
-  } catch (err: any) {
-    if (err.code === '23505') {
+  } catch (err: unknown) {
+    if (typeof err === 'object' && err !== null && 'code' in err && (err as { code: string }).code === '23505') {
       res.status(409).json({ error: 'Category already exists' });
       return;
     }

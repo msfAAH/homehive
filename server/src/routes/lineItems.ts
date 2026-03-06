@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getDb } from '../db/connection.js';
+import { verifyProjectOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
@@ -13,17 +14,7 @@ async function recalculateProjectCost(projectId: string | number): Promise<void>
   `;
 }
 
-async function verifyProjectOwnership(projectId: string, userId: number): Promise<boolean> {
-  const sql = getDb();
-  const rows = await sql`
-    SELECT p.id FROM projects p
-    JOIN homes h ON p.home_id = h.id
-    WHERE p.id = ${projectId} AND h.user_id = ${userId}
-  `;
-  return rows.length > 0;
-}
-
-async function verifyLineItemOwnership(lineItemId: string, userId: number): Promise<any> {
+async function verifyLineItemOwnership(lineItemId: string, userId: number): Promise<Record<string, unknown> | null> {
   const sql = getDb();
   const [row] = await sql`
     SELECT li.* FROM line_items li
@@ -92,7 +83,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
     WHERE id = ${req.params.id}
   `;
 
-  await recalculateProjectCost(existing.project_id);
+  await recalculateProjectCost(existing.project_id as string);
 
   const [item] = await sql`SELECT * FROM line_items WHERE id = ${req.params.id}`;
   res.json(item);
@@ -108,7 +99,7 @@ router.delete('/:id', async (req: AuthRequest, res) => {
 
   const sql = getDb();
   await sql`DELETE FROM line_items WHERE id = ${req.params.id}`;
-  await recalculateProjectCost(existing.project_id);
+  await recalculateProjectCost(existing.project_id as string);
   res.json({ message: 'Line item deleted' });
 });
 

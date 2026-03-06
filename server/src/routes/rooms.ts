@@ -1,24 +1,9 @@
 import { Router } from 'express';
 import { getDb } from '../db/connection.js';
+import { verifyHomeOwnership, verifyRoomOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
-
-async function verifyHomeOwnership(homeId: string, userId: number): Promise<boolean> {
-  const sql = getDb();
-  const rows = await sql`SELECT id FROM homes WHERE id = ${homeId} AND user_id = ${userId}`;
-  return rows.length > 0;
-}
-
-async function verifyRoomOwnership(roomId: string, userId: number): Promise<any> {
-  const sql = getDb();
-  const [row] = await sql`
-    SELECT r.* FROM rooms r
-    JOIN homes h ON r.home_id = h.id
-    WHERE r.id = ${roomId} AND h.user_id = ${userId}
-  `;
-  return row ?? null;
-}
 
 // GET /home/:homeId - list rooms for a home with project count
 router.get('/home/:homeId', async (req: AuthRequest, res) => {

@@ -26,21 +26,21 @@ export default function SignupPage() {
     try {
       await signup(email, password, firstName, lastName);
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Signup failed');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Signup failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleSuccess = async (response: any) => {
+  const handleGoogleSuccess = async (response: { credential: string }) => {
     setError('');
     setLoading(true);
     try {
       await googleLogin(response.credential);
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Google login failed');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Google login failed');
     } finally {
       setLoading(false);
     }
