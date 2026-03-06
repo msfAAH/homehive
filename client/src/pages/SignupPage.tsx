@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, type CredentialResponse } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 
 const HAS_GOOGLE = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -33,10 +33,11 @@ export default function SignupPage() {
     }
   };
 
-  const handleGoogleSuccess = async (response: { credential: string }) => {
+  const handleGoogleSuccess = async (response: CredentialResponse) => {
     setError('');
     setLoading(true);
     try {
+      if (!response.credential) return;
       await googleLogin(response.credential);
       navigate('/');
     } catch (err: unknown) {
