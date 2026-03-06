@@ -28,10 +28,10 @@ export default function HomeCard({ home }: HomeCardProps) {
       <div className="mt-3 flex flex-wrap gap-4 text-sm text-text-muted">
         {home.year_built && <span>Built {home.year_built}</span>}
         {home.room_count !== undefined && (
-          <span>{home.room_count} {home.room_count === 1 ? 'room' : 'rooms'}</span>
+          <span>{home.room_count} {Number(home.room_count) === 1 ? 'room' : 'rooms'}</span>
         )}
         {home.project_count !== undefined && (
-          <span>{home.project_count} {home.project_count === 1 ? 'project' : 'projects'}</span>
+          <span>{home.project_count} {Number(home.project_count) === 1 ? 'project' : 'projects'}</span>
         )}
       </div>
     </Card>

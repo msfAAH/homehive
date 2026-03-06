@@ -7,8 +7,8 @@ interface RoomCardProps {
   projects?: Project[];
 }
 
-function formatCost(value: number): string {
-  return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+function formatCost(value: number | string): string {
+  return '$' + Number(value).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 export default function RoomCard({ room, projects = [] }: RoomCardProps) {
@@ -23,10 +23,10 @@ export default function RoomCard({ room, projects = [] }: RoomCardProps) {
       <div className="mt-2 flex flex-wrap gap-4 text-sm text-text-muted">
         {room.floor && <span>{room.floor}</span>}
         {room.project_count !== undefined && (
-          <span>{room.project_count} {room.project_count === 1 ? 'project' : 'projects'}</span>
+          <span>{room.project_count} {Number(room.project_count) === 1 ? 'project' : 'projects'}</span>
         )}
-        {!!room.item_count && (
-          <span>{room.item_count} {room.item_count === 1 ? 'appliance' : 'appliances'}</span>
+        {Number(room.item_count) > 0 && (
+          <span>{room.item_count} {Number(room.item_count) === 1 ? 'appliance' : 'appliances'}</span>
         )}
       </div>
       {projects.length > 0 && (
@@ -48,11 +48,11 @@ export default function RoomCard({ room, projects = [] }: RoomCardProps) {
                 <p className="text-xs font-semibold uppercase tracking-wide text-text-muted mb-1">{year}</p>
                 <ul className="flex flex-col gap-1">
                   {yearProjects.map((project) => {
-                    const cost = project.actual_cost > 0 ? project.actual_cost : project.estimated_cost;
+                    const cost = Number(project.actual_cost) > 0 ? project.actual_cost : project.estimated_cost;
                     return (
                       <li key={project.id} className="flex items-center justify-between text-sm">
                         <span className="font-medium text-text truncate mr-2">{project.name}</span>
-                        {cost > 0 && <span className="shrink-0 text-text-muted">{formatCost(cost)}</span>}
+                        {Number(cost) > 0 && <span className="shrink-0 text-text-muted">{formatCost(cost)}</span>}
                       </li>
                     );
                   })}

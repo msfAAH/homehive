@@ -20,6 +20,6 @@ export function StatusBadge({ status }: { status: Project['status'] }) {
   );
 }
 
-export function formatCost(value: number): string {
-  return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+export function formatCost(value: number | string): string {
+  return '$' + Number(value).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }

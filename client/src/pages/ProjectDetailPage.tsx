@@ -13,8 +13,8 @@ import WarrantyMaintenance from '../components/WarrantyMaintenance';
 import { apiGet, apiDelete } from '../api/client';
 import type { Project } from '../types';
 
-const fmt = (n: number) =>
-  '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n: number | string) =>
+  '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const statusStyles: Record<string, string> = {
   planned: 'bg-gray-100 text-gray-700',

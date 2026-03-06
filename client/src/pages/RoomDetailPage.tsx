@@ -171,7 +171,7 @@ export default function RoomDetailPage() {
                       <h3 className="font-semibold text-text">{project.name}</h3>
                       <div className="mt-1 flex flex-wrap gap-3 text-sm text-text-muted">
                         {project.category_name && <span>{project.category_name}</span>}
-                        {project.estimated_cost > 0 && (
+                        {Number(project.estimated_cost) > 0 && (
                           <span>{formatCost(project.estimated_cost)}</span>
                         )}
                       </div>
