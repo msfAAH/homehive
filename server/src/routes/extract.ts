@@ -1,16 +1,15 @@
-import { Router, type NextFunction, type Response } from 'express';
+import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import { PDFParse, VerbosityLevel } from 'pdf-parse';
 import { getDb } from '../db/connection.js';
+import { wrap } from '../middleware/asyncWrap.js';
 import { verifyProjectOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
 function getClient(): Anthropic {

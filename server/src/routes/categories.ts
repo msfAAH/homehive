@@ -1,10 +1,8 @@
-import { Router, type Request, type NextFunction, type Response } from 'express';
+import { Router } from 'express';
 import { getDb } from '../db/connection.js';
+import { wrapPublic as wrap } from '../middleware/asyncWrap.js';
 
 const router = Router();
-
-const wrap = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: Request, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
 
 // GET / - list all categories
 router.get('/', wrap(async (_req, res) => {

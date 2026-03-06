@@ -1,12 +1,10 @@
-import { Router, type NextFunction, type Response } from 'express';
+import { Router } from 'express';
 import { getDb } from '../db/connection.js';
-import { verifyProjectOwnership } from '../db/ownership.js';
+import { wrap } from '../middleware/asyncWrap.js';
+import { verifyProjectOwnership, verifyLineItemOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
-
-const wrap = (fn: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: AuthRequest, res: Response, next: NextFunction) => fn(req, res, next).catch(next);
 
 async function recalculateProjectCost(projectId: string | number): Promise<void> {
   const sql = getDb();
@@ -17,16 +15,6 @@ async function recalculateProjectCost(projectId: string | number): Promise<void>
   `;
 }
 
-async function verifyLineItemOwnership(lineItemId: string, userId: number): Promise<Record<string, unknown> | null> {
-  const sql = getDb();
-  const [row] = await sql`
-    SELECT li.* FROM line_items li
-    JOIN projects p ON li.project_id = p.id
-    JOIN homes h ON p.home_id = h.id
-    WHERE li.id = ${lineItemId} AND h.user_id = ${userId}
-  `;
-  return row ?? null;
-}
 
 // GET /project/:projectId - list line items for a project
 router.get('/project/:projectId', wrap(async (req, res) => {
