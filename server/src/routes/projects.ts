@@ -19,15 +19,18 @@ router.get('/home/:homeId', wrap(async (req, res) => {
   const cId = categoryId ? Number(categoryId) : null;
   const st = status ? String(status) : null;
 
+  // Use boolean flags to toggle each optional filter.
+  // Avoids the "${param} IS NULL" parameterised pattern which can cause
+  // type-inference issues with the Neon SQL-over-HTTP driver.
   const projects = await sql`
     SELECT p.*, r.name AS room_name, pc.name AS category_name
     FROM projects p
     LEFT JOIN rooms r ON p.room_id = r.id
     LEFT JOIN project_categories pc ON p.category_id = pc.id
     WHERE p.home_id = ${req.params.homeId}
-      AND (${rId} IS NULL OR p.room_id = ${rId})
-      AND (${cId} IS NULL OR p.category_id = ${cId})
-      AND (${st} IS NULL OR p.status = ${st})
+      AND (${rId === null} OR p.room_id = ${rId})
+      AND (${cId === null} OR p.category_id = ${cId})
+      AND (${st === null} OR p.status = ${st})
     ORDER BY p.created_at DESC
   `;
   res.json(projects);
