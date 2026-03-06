@@ -442,7 +442,7 @@ export default function HomeDetailPage() {
                 <RoomCard
                   key={room.id}
                   room={room}
-                  projects={projects.filter((p) => p.room_id === room.id)}
+                  projects={projects.filter((p) => p.room_id != null && Number(p.room_id) === Number(room.id))}
                 />
               ))}
             </div>
