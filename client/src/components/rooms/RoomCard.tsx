@@ -17,7 +17,7 @@ export default function RoomCard({ room, projects = [] }: RoomCardProps) {
   return (
     <Card onClick={() => navigate(`/homes/${room.home_id}/rooms/${room.id}`)}>
       <h3 className="text-lg font-semibold text-text flex items-center gap-2">
-        {room.icon && <span className="text-xl leading-none">{room.icon}</span>}
+        {room.icon && <span className="material-symbols-rounded text-xl leading-none text-slate">{room.icon}</span>}
         {room.name}
       </h3>
       <div className="mt-2 flex flex-wrap gap-4 text-sm text-text-muted">

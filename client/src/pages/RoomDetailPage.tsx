@@ -132,7 +132,7 @@ export default function RoomDetailPage() {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="font-display text-2xl font-semibold text-navy flex items-center gap-2">
-              {room.icon && <span className="text-3xl leading-none">{room.icon}</span>}
+              {room.icon && <span className="material-symbols-rounded text-3xl leading-none text-slate">{room.icon}</span>}
               {room.name}
             </h1>
             <div className="mt-1 flex flex-wrap gap-4 text-sm text-text-muted">
