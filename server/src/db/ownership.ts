@@ -6,7 +6,7 @@ export async function verifyHomeOwnership(homeId: string, userId: number): Promi
   return rows.length > 0;
 }
 
-export async function verifyRoomOwnership(roomId: string, userId: number): Promise<Record<string, unknown> | null> {
+export async function verifyRoomOwnership(roomId: string, userId: number): Promise<Record<string, any> | null> {
   const sql = getDb();
   const [row] = await sql`
     SELECT r.* FROM rooms r
@@ -16,7 +16,7 @@ export async function verifyRoomOwnership(roomId: string, userId: number): Promi
   return row ?? null;
 }
 
-export async function verifyProjectOwnership(projectId: string, userId: number): Promise<Record<string, unknown> | null> {
+export async function verifyProjectOwnership(projectId: string, userId: number): Promise<Record<string, any> | null> {
   const sql = getDb();
   const [row] = await sql`
     SELECT p.* FROM projects p
