@@ -100,7 +100,7 @@ export default function ContractorTable({ projectId, contractors, onUpdate }: Co
 
   const typeSelect = (
     <select
-      className="w-full rounded border border-border px-2 py-1 text-sm bg-white text-text"
+      className="w-full rounded border border-border px-2 py-1 text-sm bg-warm-white text-text"
       value={editData.contractor_type}
       onChange={(e) => setEditData({ ...editData, contractor_type: e.target.value })}
     >

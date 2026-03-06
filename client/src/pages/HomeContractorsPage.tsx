@@ -35,7 +35,7 @@ export default function HomeContractorsPage() {
         &larr; Back to Home
       </Link>
 
-      <h1 className="mb-6 text-2xl font-bold text-text">Contractors</h1>
+      <h1 className="mb-6 font-display text-2xl font-semibold text-navy">Contractors</h1>
 
       {loading && <p className="text-text-muted">Loading...</p>}
 

@@ -41,17 +41,17 @@ export default function LoginPage() {
     }
   };
 
-  const inputClass = 'w-full rounded-lg border border-border px-3 py-2.5 text-sm bg-white text-text focus:outline-primary focus:ring-1 focus:ring-primary';
+  const inputClass = 'w-full rounded-lg border border-border px-3 py-2.5 text-sm bg-warm-white text-text focus:outline-primary focus:ring-1 focus:ring-primary';
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-cream px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-primary">HomeHive</h1>
-          <p className="mt-2 text-sm text-text-muted">Sign in to your account</p>
+          <h1 className="font-display text-4xl font-bold text-navy">Call Hank</h1>
+          <p className="mt-2 text-sm text-slate">Your home's best friend.</p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+        <div className="rounded-[12px] border border-border bg-soft-cream p-6 shadow-sm">
           {error && (
             <div className="mb-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
               {error}
@@ -88,7 +88,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
+              className="w-full rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-navy hover:bg-primary-dark transition-colors disabled:opacity-50"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>

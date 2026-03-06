@@ -1,21 +1,48 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #f59e0b;
-  --color-primary-dark: #d97706;
+  /* Primary */
+  --color-primary: #F9AA20;
+  --color-primary-dark: #e09610;
   --color-primary-light: #fbbf24;
-  --color-surface: #ffffff;
-  --color-surface-dark: #f9fafb;
-  --color-text: #111827;
-  --color-text-secondary: #6b7280;
-  --color-border: #e5e7eb;
-  --color-danger: #ef4444;
-  --color-success: #10b981;
+  --color-cream: #E1E0D1;
+  --color-tomato: #F0533E;
+  --color-slate: #3C5F7C;
+
+  /* Secondary */
+  --color-navy: #1E2D3D;
+  --color-sand: #C4B99A;
+  --color-deep-slate: #2C4459;
+  --color-warm-white: #F7F6F1;
+
+  /* Accent / Status */
+  --color-success: #5B8C5A;
+  --color-info: #7BA3BE;
+  --color-soft-cream: #EEEDE3;
+  --color-charcoal: #2A2D34;
+
+  /* Semantic aliases */
+  --color-surface: #EEEDE3;
+  --color-surface-dark: #E1E0D1;
+  --color-text: #2A2D34;
+  --color-text-secondary: #3C5F7C;
+  --color-text-muted: #3C5F7C;
+  --color-border: #C4B99A;
+  --color-danger: #F0533E;
+
+  /* Font families */
+  --font-display: 'Lora', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background-color: var(--color-surface-dark);
+  font-family: var(--font-body);
+  background-color: var(--color-cream);
   color: var(--color-text);
+  line-height: 1.6;
+}
+
+h1, h2 {
+  font-family: var(--font-display);
 }

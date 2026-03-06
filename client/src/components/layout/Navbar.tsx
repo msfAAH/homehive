@@ -13,13 +13,13 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="flex min-h-[56px] shrink-0 items-center bg-primary px-4 text-white shadow-md">
+    <nav className="flex min-h-[56px] shrink-0 items-center bg-navy px-4 text-warm-white shadow-md">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between">
         <div className="flex items-center gap-3">
           {!isHome && (
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center justify-center rounded-lg p-1 hover:bg-primary-dark transition-colors"
+              className="flex items-center justify-center rounded-lg p-1 hover:bg-deep-slate transition-colors"
               aria-label="Go back"
             >
               <svg
@@ -36,8 +36,8 @@ export default function Navbar() {
               </svg>
             </button>
           )}
-          <Link to="/" className="text-xl font-bold tracking-tight">
-            HomeHive
+          <Link to="/" className="font-display text-xl font-bold tracking-tight text-warm-white">
+            Call Hank
           </Link>
         </div>
 
@@ -52,7 +52,7 @@ export default function Navbar() {
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-dark text-xs font-bold">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-navy">
                   {(user.first_name?.[0] || user.email[0]).toUpperCase()}
                 </div>
               )}
@@ -62,7 +62,7 @@ export default function Navbar() {
             </div>
             <button
               onClick={handleLogout}
-              className="rounded-lg px-2.5 py-1 text-xs font-medium hover:bg-primary-dark transition-colors"
+              className="rounded-full px-2.5 py-1 text-xs font-medium hover:bg-deep-slate transition-colors"
             >
               Logout
             </button>
