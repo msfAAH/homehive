@@ -8,29 +8,8 @@ import RoomForm from '../components/rooms/RoomForm';
 import ProjectForm from '../components/projects/ProjectForm';
 import ItemsSection from '../components/items/ItemsSection';
 import { apiGet, apiDelete, apiUpload, uploadsUrl } from '../api/client';
+import { StatusBadge, formatCost } from '../components/projects/ProjectStatus';
 import type { Room, Project, Attachment, Item } from '../types';
-
-function formatCost(value: number): string {
-  return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-
-function StatusBadge({ status }: { status: Project['status'] }) {
-  const colors: Record<string, string> = {
-    planned: 'bg-gray-100 text-gray-700',
-    in_progress: 'bg-amber-100 text-amber-700',
-    completed: 'bg-green-100 text-green-700',
-  };
-  const labels: Record<string, string> = {
-    planned: 'Planned',
-    in_progress: 'In Progress',
-    completed: 'Completed',
-  };
-  return (
-    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status]}`}>
-      {labels[status]}
-    </span>
-  );
-}
 
 export default function RoomDetailPage() {
   const { homeId, roomId } = useParams<{ homeId: string; roomId: string }>();

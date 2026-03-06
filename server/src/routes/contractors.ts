@@ -1,26 +1,11 @@
 import { Router } from 'express';
 import { getDb } from '../db/connection.js';
+import { verifyHomeOwnership, verifyProjectOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
-async function verifyHomeOwnership(homeId: string, userId: number): Promise<boolean> {
-  const sql = getDb();
-  const rows = await sql`SELECT id FROM homes WHERE id = ${homeId} AND user_id = ${userId}`;
-  return rows.length > 0;
-}
-
-async function verifyProjectOwnership(projectId: string, userId: number): Promise<boolean> {
-  const sql = getDb();
-  const rows = await sql`
-    SELECT p.id FROM projects p
-    JOIN homes h ON p.home_id = h.id
-    WHERE p.id = ${projectId} AND h.user_id = ${userId}
-  `;
-  return rows.length > 0;
-}
-
-async function verifyContractorOwnership(contractorId: string, userId: number): Promise<any> {
+async function verifyContractorOwnership(contractorId: string, userId: number): Promise<Record<string, unknown> | null> {
   const sql = getDb();
   const [row] = await sql`
     SELECT c.* FROM contractors c

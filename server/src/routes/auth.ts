@@ -127,7 +127,7 @@ router.post('/google', async (req, res) => {
         created_at: user.created_at,
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Google auth error:', err);
     res.status(401).json({ error: 'Google authentication failed' });
   }

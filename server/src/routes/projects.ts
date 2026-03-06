@@ -1,24 +1,9 @@
 import { Router } from 'express';
 import { getDb } from '../db/connection.js';
+import { verifyHomeOwnership, verifyProjectOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
-
-async function verifyHomeOwnership(homeId: string, userId: number): Promise<boolean> {
-  const sql = getDb();
-  const rows = await sql`SELECT id FROM homes WHERE id = ${homeId} AND user_id = ${userId}`;
-  return rows.length > 0;
-}
-
-async function verifyProjectOwnership(projectId: string, userId: number): Promise<any> {
-  const sql = getDb();
-  const [row] = await sql`
-    SELECT p.* FROM projects p
-    JOIN homes h ON p.home_id = h.id
-    WHERE p.id = ${projectId} AND h.user_id = ${userId}
-  `;
-  return row ?? null;
-}
 
 // GET /home/:homeId - list projects for a home (with optional filters)
 router.get('/home/:homeId', async (req: AuthRequest, res) => {
