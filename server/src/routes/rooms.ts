@@ -22,7 +22,7 @@ async function verifyRoomOwnership(roomId: string, userId: number): Promise<any>
 
 // GET /home/:homeId - list rooms for a home with project count
 router.get('/home/:homeId', async (req: AuthRequest, res) => {
-  if (!await verifyHomeOwnership(req.params.homeId, req.userId!)) {
+  if (!await verifyHomeOwnership(req.params.homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -33,7 +33,7 @@ router.get('/home/:homeId', async (req: AuthRequest, res) => {
       (SELECT COUNT(*) FROM projects WHERE room_id = r.id) AS project_count,
       (SELECT COUNT(*) FROM items WHERE room_id = r.id) AS item_count
     FROM rooms r
-    WHERE r.home_id = ${req.params.homeId}
+    WHERE r.home_id = ${req.params.homeId as string}
     ORDER BY r.name ASC
   `;
   res.json(rooms);
@@ -41,7 +41,7 @@ router.get('/home/:homeId', async (req: AuthRequest, res) => {
 
 // GET /:id - get single room
 router.get('/:id', async (req: AuthRequest, res) => {
-  const room = await verifyRoomOwnership(req.params.id, req.userId!);
+  const room = await verifyRoomOwnership(req.params.id as string, req.userId!);
   if (!room) {
     res.status(404).json({ error: 'Room not found' });
     return;
@@ -60,7 +60,7 @@ router.get('/:id', async (req: AuthRequest, res) => {
 
 // POST /home/:homeId - create room
 router.post('/home/:homeId', async (req: AuthRequest, res) => {
-  if (!await verifyHomeOwnership(req.params.homeId, req.userId!)) {
+  if (!await verifyHomeOwnership(req.params.homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -75,7 +75,7 @@ router.post('/home/:homeId', async (req: AuthRequest, res) => {
 
   const [newRoom] = await sql`
     INSERT INTO rooms (home_id, name, icon, floor, notes)
-    VALUES (${req.params.homeId}, ${name.trim()}, ${icon || null}, ${floor || null}, ${notes || null})
+    VALUES (${req.params.homeId as string}, ${name.trim()}, ${icon || null}, ${floor || null}, ${notes || null})
     RETURNING *
   `;
   res.status(201).json(newRoom);
@@ -83,7 +83,7 @@ router.post('/home/:homeId', async (req: AuthRequest, res) => {
 
 // PUT /:id - update room
 router.put('/:id', async (req: AuthRequest, res) => {
-  const existing = await verifyRoomOwnership(req.params.id, req.userId!);
+  const existing = await verifyRoomOwnership(req.params.id as string, req.userId!);
   if (!existing) {
     res.status(404).json({ error: 'Room not found' });
     return;
@@ -108,7 +108,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
 
 // DELETE /:id - delete room
 router.delete('/:id', async (req: AuthRequest, res) => {
-  if (!await verifyRoomOwnership(req.params.id, req.userId!)) {
+  if (!await verifyRoomOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Room not found' });
     return;
   }

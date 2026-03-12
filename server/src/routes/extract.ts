@@ -91,7 +91,7 @@ async function verifyProjectOwnership(projectId: string, userId: number): Promis
 // POST /extract/item/:id
 router.post('/item/:id', async (req: AuthRequest, res) => {
   const sql = getDb();
-  const item = await verifyItemOwnership(req.params.id, req.userId!);
+  const item = await verifyItemOwnership(req.params.id as string, req.userId!);
   if (!item) { res.status(404).json({ error: 'Item not found' }); return; }
 
   const attachments = await sql`SELECT * FROM attachments WHERE item_id = ${req.params.id}`;
@@ -131,7 +131,7 @@ router.post('/item/:id', async (req: AuthRequest, res) => {
 // POST /extract/project/:id
 router.post('/project/:id', async (req: AuthRequest, res) => {
   const sql = getDb();
-  const project = await verifyProjectOwnership(req.params.id, req.userId!);
+  const project = await verifyProjectOwnership(req.params.id as string, req.userId!);
   if (!project) { res.status(404).json({ error: 'Project not found' }); return; }
 
   const attachments = await sql`SELECT * FROM attachments WHERE project_id = ${req.params.id}`;
@@ -170,7 +170,7 @@ router.post('/project/:id', async (req: AuthRequest, res) => {
 
 // DELETE /extract/item/:id - clear extracted info
 router.delete('/item/:id', async (req: AuthRequest, res) => {
-  if (!await verifyItemOwnership(req.params.id, req.userId!)) {
+  if (!await verifyItemOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Item not found' }); return;
   }
   const sql = getDb();
@@ -180,7 +180,7 @@ router.delete('/item/:id', async (req: AuthRequest, res) => {
 
 // DELETE /extract/project/:id - clear extracted info
 router.delete('/project/:id', async (req: AuthRequest, res) => {
-  if (!await verifyProjectOwnership(req.params.id, req.userId!)) {
+  if (!await verifyProjectOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' }); return;
   }
   const sql = getDb();

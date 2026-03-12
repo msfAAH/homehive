@@ -36,19 +36,19 @@ async function verifyLineItemOwnership(lineItemId: string, userId: number): Prom
 
 // GET /project/:projectId - list line items for a project
 router.get('/project/:projectId', async (req: AuthRequest, res) => {
-  if (!await verifyProjectOwnership(req.params.projectId, req.userId!)) {
+  if (!await verifyProjectOwnership(req.params.projectId as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
 
   const sql = getDb();
-  const items = await sql`SELECT * FROM line_items WHERE project_id = ${req.params.projectId} ORDER BY created_at ASC`;
+  const items = await sql`SELECT * FROM line_items WHERE project_id = ${req.params.projectId as string} ORDER BY created_at ASC`;
   res.json(items);
 });
 
 // POST /project/:projectId - create line item
 router.post('/project/:projectId', async (req: AuthRequest, res) => {
-  if (!await verifyProjectOwnership(req.params.projectId, req.userId!)) {
+  if (!await verifyProjectOwnership(req.params.projectId as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
@@ -63,17 +63,17 @@ router.post('/project/:projectId', async (req: AuthRequest, res) => {
 
   const [item] = await sql`
     INSERT INTO line_items (project_id, description, quantity, unit_cost, vendor, notes)
-    VALUES (${req.params.projectId}, ${description.trim()}, ${quantity ?? 1}, ${unit_cost ?? 0}, ${vendor || null}, ${notes || null})
+    VALUES (${req.params.projectId as string}, ${description.trim()}, ${quantity ?? 1}, ${unit_cost ?? 0}, ${vendor || null}, ${notes || null})
     RETURNING *
   `;
 
-  await recalculateProjectCost(req.params.projectId);
+  await recalculateProjectCost(req.params.projectId as string);
   res.status(201).json(item);
 });
 
 // PUT /:id - update line item
 router.put('/:id', async (req: AuthRequest, res) => {
-  const existing = await verifyLineItemOwnership(req.params.id, req.userId!);
+  const existing = await verifyLineItemOwnership(req.params.id as string, req.userId!);
   if (!existing) {
     res.status(404).json({ error: 'Line item not found' });
     return;
@@ -100,7 +100,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
 
 // DELETE /:id - delete line item
 router.delete('/:id', async (req: AuthRequest, res) => {
-  const existing = await verifyLineItemOwnership(req.params.id, req.userId!);
+  const existing = await verifyLineItemOwnership(req.params.id as string, req.userId!);
   if (!existing) {
     res.status(404).json({ error: 'Line item not found' });
     return;

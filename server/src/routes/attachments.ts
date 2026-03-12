@@ -129,7 +129,7 @@ router.post('/', (req: AuthRequest, res, next) => {
 
 // DELETE /:id - delete attachment and remove file from disk
 router.delete('/:id', async (req: AuthRequest, res) => {
-  const attachment = await verifyAttachmentOwnership(req.params.id, req.userId!);
+  const attachment = await verifyAttachmentOwnership(req.params.id as string, req.userId!);
   if (!attachment) {
     res.status(404).json({ error: 'Attachment not found' });
     return;

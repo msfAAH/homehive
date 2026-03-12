@@ -22,7 +22,7 @@ async function verifyProjectOwnership(projectId: string, userId: number): Promis
 
 // GET /home/:homeId - list projects for a home (with optional filters)
 router.get('/home/:homeId', async (req: AuthRequest, res) => {
-  if (!await verifyHomeOwnership(req.params.homeId, req.userId!)) {
+  if (!await verifyHomeOwnership(req.params.homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -38,7 +38,7 @@ router.get('/home/:homeId', async (req: AuthRequest, res) => {
     FROM projects p
     LEFT JOIN rooms r ON p.room_id = r.id
     LEFT JOIN project_categories pc ON p.category_id = pc.id
-    WHERE p.home_id = ${req.params.homeId}
+    WHERE p.home_id = ${req.params.homeId as string}
       AND (${rId} IS NULL OR p.room_id = ${rId})
       AND (${cId} IS NULL OR p.category_id = ${cId})
       AND (${st} IS NULL OR p.status = ${st})
@@ -49,7 +49,7 @@ router.get('/home/:homeId', async (req: AuthRequest, res) => {
 
 // GET /:id - get single project with line items and attachments
 router.get('/:id', async (req: AuthRequest, res) => {
-  if (!await verifyProjectOwnership(req.params.id, req.userId!)) {
+  if (!await verifyProjectOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
@@ -73,7 +73,7 @@ router.get('/:id', async (req: AuthRequest, res) => {
 
 // POST /home/:homeId - create project
 router.post('/home/:homeId', async (req: AuthRequest, res) => {
-  if (!await verifyHomeOwnership(req.params.homeId, req.userId!)) {
+  if (!await verifyHomeOwnership(req.params.homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -88,7 +88,7 @@ router.post('/home/:homeId', async (req: AuthRequest, res) => {
 
   const [project] = await sql`
     INSERT INTO projects (home_id, room_id, category_id, name, description, status, year_created, estimated_cost, actual_cost)
-    VALUES (${req.params.homeId}, ${room_id || null}, ${category_id || null}, ${name.trim()}, ${description || null}, ${status || 'planned'}, ${year_created || null}, ${estimated_cost ?? 0}, ${actual_cost ?? 0})
+    VALUES (${req.params.homeId as string}, ${room_id || null}, ${category_id || null}, ${name.trim()}, ${description || null}, ${status || 'planned'}, ${year_created || null}, ${estimated_cost ?? 0}, ${actual_cost ?? 0})
     RETURNING *
   `;
   res.status(201).json(project);
@@ -96,7 +96,7 @@ router.post('/home/:homeId', async (req: AuthRequest, res) => {
 
 // PUT /:id - update project
 router.put('/:id', async (req: AuthRequest, res) => {
-  const existing = await verifyProjectOwnership(req.params.id, req.userId!);
+  const existing = await verifyProjectOwnership(req.params.id as string, req.userId!);
   if (!existing) {
     res.status(404).json({ error: 'Project not found' });
     return;
@@ -125,7 +125,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
 
 // DELETE /:id - delete project
 router.delete('/:id', async (req: AuthRequest, res) => {
-  if (!await verifyProjectOwnership(req.params.id, req.userId!)) {
+  if (!await verifyProjectOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }

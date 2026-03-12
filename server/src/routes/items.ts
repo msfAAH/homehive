@@ -30,15 +30,15 @@ async function verifyItemOwnership(itemId: string, userId: number): Promise<any>
 
 // GET /room/:roomId - list items for a room with their attachments
 router.get('/room/:roomId', async (req: AuthRequest, res) => {
-  if (!await verifyRoomOwnership(req.params.roomId, req.userId!)) {
+  if (!await verifyRoomOwnership(req.params.roomId as string, req.userId!)) {
     res.status(404).json({ error: 'Room not found' });
     return;
   }
 
   const sql = getDb();
   const [items, attachments] = await Promise.all([
-    sql`SELECT * FROM items WHERE room_id = ${req.params.roomId} ORDER BY name ASC`,
-    sql`SELECT * FROM attachments WHERE item_id IN (SELECT id FROM items WHERE room_id = ${req.params.roomId}) ORDER BY created_at ASC`,
+    sql`SELECT * FROM items WHERE room_id = ${req.params.roomId as string} ORDER BY name ASC`,
+    sql`SELECT * FROM attachments WHERE item_id IN (SELECT id FROM items WHERE room_id = ${req.params.roomId as string}) ORDER BY created_at ASC`,
   ]);
 
   const result = items.map((item: any) => ({
@@ -50,7 +50,7 @@ router.get('/room/:roomId', async (req: AuthRequest, res) => {
 
 // POST /room/:roomId - create item
 router.post('/room/:roomId', async (req: AuthRequest, res) => {
-  if (!await verifyRoomOwnership(req.params.roomId, req.userId!)) {
+  if (!await verifyRoomOwnership(req.params.roomId as string, req.userId!)) {
     res.status(404).json({ error: 'Room not found' });
     return;
   }
@@ -65,7 +65,7 @@ router.post('/room/:roomId', async (req: AuthRequest, res) => {
 
   const [item] = await sql`
     INSERT INTO items (room_id, name, category, brand, model, serial_number, purchase_date, purchase_price, warranty_expiry, notes)
-    VALUES (${req.params.roomId}, ${name.trim()}, ${category || null}, ${brand?.trim() || null}, ${model?.trim() || null}, ${serial_number?.trim() || null}, ${purchase_date || null}, ${purchase_price != null ? Number(purchase_price) : null}, ${warranty_expiry || null}, ${notes?.trim() || null})
+    VALUES (${req.params.roomId as string}, ${name.trim()}, ${category || null}, ${brand?.trim() || null}, ${model?.trim() || null}, ${serial_number?.trim() || null}, ${purchase_date || null}, ${purchase_price != null ? Number(purchase_price) : null}, ${warranty_expiry || null}, ${notes?.trim() || null})
     RETURNING *
   `;
   res.status(201).json({ ...item, attachments: [] });
@@ -73,7 +73,7 @@ router.post('/room/:roomId', async (req: AuthRequest, res) => {
 
 // PUT /:id - update item
 router.put('/:id', async (req: AuthRequest, res) => {
-  const existing = await verifyItemOwnership(req.params.id, req.userId!);
+  const existing = await verifyItemOwnership(req.params.id as string, req.userId!);
   if (!existing) {
     res.status(404).json({ error: 'Item not found' });
     return;
@@ -106,7 +106,7 @@ router.put('/:id', async (req: AuthRequest, res) => {
 
 // DELETE /:id - delete item and its attachment files
 router.delete('/:id', async (req: AuthRequest, res) => {
-  if (!await verifyItemOwnership(req.params.id, req.userId!)) {
+  if (!await verifyItemOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Item not found' });
     return;
   }
