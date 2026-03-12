@@ -63,7 +63,7 @@ router.post('/', wrap(async (req, res) => {
 
 // PUT /:id - update home (must belong to user)
 router.put('/:id', wrap(async (req, res) => {
-  if (!await verifyHomeOwnership(req.params.id, req.userId!)) {
+  if (!await verifyHomeOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -95,7 +95,7 @@ router.put('/:id', wrap(async (req, res) => {
 
 // POST /:id/cover-photo - upload or replace cover photo
 router.post('/:id/cover-photo', upload.single('photo'), wrap(async (req, res) => {
-  if (!await verifyHomeOwnership(req.params.id, req.userId!)) {
+  if (!await verifyHomeOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -127,7 +127,7 @@ router.post('/:id/cover-photo', upload.single('photo'), wrap(async (req, res) =>
 
 // DELETE /:id - delete home (cascades, must belong to user)
 router.delete('/:id', wrap(async (req, res) => {
-  if (!await verifyHomeOwnership(req.params.id, req.userId!)) {
+  if (!await verifyHomeOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
