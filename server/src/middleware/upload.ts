@@ -1,11 +1,16 @@
 import multer from 'multer';
 import crypto from 'crypto';
+import fs from 'fs';
 import path from 'path';
 
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
 const IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.gif'];
 const DOC_EXTS = ['.pdf', '.doc', '.docx', '.txt', '.xlsx', '.csv'];
+
+// Ensure upload directories exist
+fs.mkdirSync(path.join(UPLOADS_BASE, 'photos'), { recursive: true });
+fs.mkdirSync(path.join(UPLOADS_BASE, 'documents'), { recursive: true });
 const ALLOWED_EXTS = [...IMAGE_EXTS, ...DOC_EXTS];
 
 const storage = multer.diskStorage({

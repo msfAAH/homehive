@@ -4,12 +4,9 @@ import path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import { PDFParse, VerbosityLevel } from 'pdf-parse';
 import { getDb } from '../db/connection.js';
-import { wrap } from '../middleware/asyncWrap.js';
-import { verifyProjectOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
-
 const UPLOADS_BASE = path.join(import.meta.dirname, '../../uploads');
 
 function getClient(): Anthropic {
@@ -22,23 +19,23 @@ function getClient(): Anthropic {
 
 type ContentBlock = Anthropic.ImageBlockParam | Anthropic.TextBlockParam;
 
-async function buildContentBlocks(attachments: Record<string, unknown>[]): Promise<ContentBlock[]> {
+async function buildContentBlocks(attachments: any[]): Promise<ContentBlock[]> {
   const blocks: ContentBlock[] = [];
 
   for (const att of attachments) {
     const subdir = att.file_type === 'photo' ? 'photos' : 'documents';
-    const filePath = path.join(UPLOADS_BASE, subdir, att.stored_name as string);
+    const filePath = path.join(UPLOADS_BASE, subdir, att.stored_name);
 
     if (!fs.existsSync(filePath)) continue;
 
-    const mime: string = (att.mime_type as string) ?? '';
+    const mime: string = att.mime_type ?? '';
 
     if (att.file_type === 'photo' && mime.startsWith('image/')) {
       const data = fs.readFileSync(filePath).toString('base64');
       const mediaType = mime as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
       blocks.push({ type: 'image', source: { type: 'base64', media_type: mediaType, data } });
       blocks.push({ type: 'text', text: `[Image file: ${att.file_name}]` });
-    } else if (mime === 'application/pdf' || (att.stored_name as string)?.toLowerCase().endsWith('.pdf')) {
+    } else if (mime === 'application/pdf' || att.stored_name?.toLowerCase().endsWith('.pdf')) {
       try {
         const buffer = fs.readFileSync(filePath);
         const parser = new PDFParse({ data: new Uint8Array(buffer), verbosity: VerbosityLevel.ERRORS });
@@ -70,7 +67,7 @@ Summarize any recommended maintenance tasks, intervals, or service requirements.
 
 Be concise and practical. Use bullet points where helpful.`;
 
-async function verifyItemOwnership(itemId: string, userId: number): Promise<Record<string, unknown> | null> {
+async function verifyItemOwnership(itemId: string, userId: number): Promise<any> {
   const sql = getDb();
   const [row] = await sql`
     SELECT i.* FROM items i
@@ -81,19 +78,20 @@ async function verifyItemOwnership(itemId: string, userId: number): Promise<Reco
   return row ?? null;
 }
 
-function parseExtractResponse(responseText: string): { warrantyInfo: string; maintenanceInfo: string } {
-  const warrantyMatch = responseText.match(/\*\*WARRANTY INFORMATION\*\*\s*([\s\S]*?)(?=\*\*MAINTENANCE SCHEDULE\*\*|$)/i);
-  const maintenanceMatch = responseText.match(/\*\*MAINTENANCE SCHEDULE\*\*\s*([\s\S]*?)$/i);
-  return {
-    warrantyInfo: warrantyMatch ? warrantyMatch[1].trim() : responseText,
-    maintenanceInfo: maintenanceMatch ? maintenanceMatch[1].trim() : '',
-  };
+async function verifyProjectOwnership(projectId: string, userId: number): Promise<any> {
+  const sql = getDb();
+  const [row] = await sql`
+    SELECT p.* FROM projects p
+    JOIN homes h ON p.home_id = h.id
+    WHERE p.id = ${projectId} AND h.user_id = ${userId}
+  `;
+  return row ?? null;
 }
 
 // POST /extract/item/:id
-router.post('/item/:id', wrap(async (req, res) => {
+router.post('/item/:id', async (req: AuthRequest, res) => {
   const sql = getDb();
-  const item = await verifyItemOwnership(req.params.id, req.userId!);
+  const item = await verifyItemOwnership(req.params.id as string, req.userId!);
   if (!item) { res.status(404).json({ error: 'Item not found' }); return; }
 
   const attachments = await sql`SELECT * FROM attachments WHERE item_id = ${req.params.id}`;
@@ -104,7 +102,7 @@ router.post('/item/:id', wrap(async (req, res) => {
 
   try {
     const client = getClient();
-    const contentBlocks = await buildContentBlocks(attachments as Record<string, unknown>[]);
+    const contentBlocks = await buildContentBlocks(attachments);
     if (contentBlocks.length === 0) { res.status(400).json({ error: 'Could not read any attachment content.' }); return; }
 
     contentBlocks.push({ type: 'text', text: EXTRACT_PROMPT });
@@ -116,22 +114,24 @@ router.post('/item/:id', wrap(async (req, res) => {
     });
 
     const responseText = message.content.filter((b) => b.type === 'text').map((b) => (b as Anthropic.TextBlock).text).join('\n');
-    const { warrantyInfo, maintenanceInfo } = parseExtractResponse(responseText);
+    const warrantyMatch = responseText.match(/\*\*WARRANTY INFORMATION\*\*\s*([\s\S]*?)(?=\*\*MAINTENANCE SCHEDULE\*\*|$)/i);
+    const maintenanceMatch = responseText.match(/\*\*MAINTENANCE SCHEDULE\*\*\s*([\s\S]*?)$/i);
+    const warrantyInfo = warrantyMatch ? warrantyMatch[1].trim() : responseText;
+    const maintenanceInfo = maintenanceMatch ? maintenanceMatch[1].trim() : '';
 
     await sql`UPDATE items SET warranty_info = ${warrantyInfo}, maintenance_info = ${maintenanceInfo}, updated_at = NOW() WHERE id = ${req.params.id}`;
     const [updated] = await sql`SELECT * FROM items WHERE id = ${req.params.id}`;
     res.json(updated);
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error('Extract error:', err);
-    const message = err instanceof Error ? err.message : 'Extraction failed';
-    res.status(500).json({ error: message });
+    res.status(500).json({ error: err.message ?? 'Extraction failed' });
   }
-}));
+});
 
 // POST /extract/project/:id
-router.post('/project/:id', wrap(async (req, res) => {
+router.post('/project/:id', async (req: AuthRequest, res) => {
   const sql = getDb();
-  const project = await verifyProjectOwnership(req.params.id, req.userId!);
+  const project = await verifyProjectOwnership(req.params.id as string, req.userId!);
   if (!project) { res.status(404).json({ error: 'Project not found' }); return; }
 
   const attachments = await sql`SELECT * FROM attachments WHERE project_id = ${req.params.id}`;
@@ -142,7 +142,7 @@ router.post('/project/:id', wrap(async (req, res) => {
 
   try {
     const client = getClient();
-    const contentBlocks = await buildContentBlocks(attachments as Record<string, unknown>[]);
+    const contentBlocks = await buildContentBlocks(attachments);
     if (contentBlocks.length === 0) { res.status(400).json({ error: 'Could not read any attachment content.' }); return; }
 
     contentBlocks.push({ type: 'text', text: EXTRACT_PROMPT });
@@ -154,36 +154,38 @@ router.post('/project/:id', wrap(async (req, res) => {
     });
 
     const responseText = message.content.filter((b) => b.type === 'text').map((b) => (b as Anthropic.TextBlock).text).join('\n');
-    const { warrantyInfo, maintenanceInfo } = parseExtractResponse(responseText);
+    const warrantyMatch = responseText.match(/\*\*WARRANTY INFORMATION\*\*\s*([\s\S]*?)(?=\*\*MAINTENANCE SCHEDULE\*\*|$)/i);
+    const maintenanceMatch = responseText.match(/\*\*MAINTENANCE SCHEDULE\*\*\s*([\s\S]*?)$/i);
+    const warrantyInfo = warrantyMatch ? warrantyMatch[1].trim() : responseText;
+    const maintenanceInfo = maintenanceMatch ? maintenanceMatch[1].trim() : '';
 
     await sql`UPDATE projects SET warranty_info = ${warrantyInfo}, maintenance_info = ${maintenanceInfo}, updated_at = NOW() WHERE id = ${req.params.id}`;
     const [updated] = await sql`SELECT * FROM projects WHERE id = ${req.params.id}`;
     res.json(updated);
-  } catch (err: unknown) {
+  } catch (err: any) {
     console.error('Extract error:', err);
-    const message = err instanceof Error ? err.message : 'Extraction failed';
-    res.status(500).json({ error: message });
+    res.status(500).json({ error: err.message ?? 'Extraction failed' });
   }
-}));
+});
 
 // DELETE /extract/item/:id - clear extracted info
-router.delete('/item/:id', wrap(async (req, res) => {
-  if (!await verifyItemOwnership(req.params.id, req.userId!)) {
+router.delete('/item/:id', async (req: AuthRequest, res) => {
+  if (!await verifyItemOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Item not found' }); return;
   }
   const sql = getDb();
   await sql`UPDATE items SET warranty_info = NULL, maintenance_info = NULL, updated_at = NOW() WHERE id = ${req.params.id}`;
   res.json({ message: 'Cleared' });
-}));
+});
 
 // DELETE /extract/project/:id - clear extracted info
-router.delete('/project/:id', wrap(async (req, res) => {
-  if (!await verifyProjectOwnership(req.params.id, req.userId!)) {
+router.delete('/project/:id', async (req: AuthRequest, res) => {
+  if (!await verifyProjectOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' }); return;
   }
   const sql = getDb();
   await sql`UPDATE projects SET warranty_info = NULL, maintenance_info = NULL, updated_at = NOW() WHERE id = ${req.params.id}`;
   res.json({ message: 'Cleared' });
-}));
+});
 
 export default router;

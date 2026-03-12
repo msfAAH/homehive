@@ -1,14 +1,28 @@
 import { Router } from 'express';
 import { getDb } from '../db/connection.js';
-import { wrap } from '../middleware/asyncWrap.js';
-import { verifyHomeOwnership, verifyProjectOwnership } from '../db/ownership.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
 
+async function verifyHomeOwnership(homeId: string, userId: number): Promise<boolean> {
+  const sql = getDb();
+  const rows = await sql`SELECT id FROM homes WHERE id = ${homeId} AND user_id = ${userId}`;
+  return rows.length > 0;
+}
+
+async function verifyProjectOwnership(projectId: string, userId: number): Promise<any> {
+  const sql = getDb();
+  const [row] = await sql`
+    SELECT p.* FROM projects p
+    JOIN homes h ON p.home_id = h.id
+    WHERE p.id = ${projectId} AND h.user_id = ${userId}
+  `;
+  return row ?? null;
+}
+
 // GET /home/:homeId - list projects for a home (with optional filters)
-router.get('/home/:homeId', wrap(async (req, res) => {
-  if (!await verifyHomeOwnership(req.params.homeId, req.userId!)) {
+router.get('/home/:homeId', async (req: AuthRequest, res) => {
+  if (!await verifyHomeOwnership(req.params.homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -19,26 +33,23 @@ router.get('/home/:homeId', wrap(async (req, res) => {
   const cId = categoryId ? Number(categoryId) : null;
   const st = status ? String(status) : null;
 
-  // Use boolean flags to toggle each optional filter.
-  // Avoids the "${param} IS NULL" parameterised pattern which can cause
-  // type-inference issues with the Neon SQL-over-HTTP driver.
   const projects = await sql`
     SELECT p.*, r.name AS room_name, pc.name AS category_name
     FROM projects p
     LEFT JOIN rooms r ON p.room_id = r.id
     LEFT JOIN project_categories pc ON p.category_id = pc.id
-    WHERE p.home_id = ${req.params.homeId}
-      AND (${rId === null} OR p.room_id = ${rId})
-      AND (${cId === null} OR p.category_id = ${cId})
-      AND (${st === null} OR p.status = ${st})
+    WHERE p.home_id = ${req.params.homeId as string}
+      AND (${rId} IS NULL OR p.room_id = ${rId})
+      AND (${cId} IS NULL OR p.category_id = ${cId})
+      AND (${st} IS NULL OR p.status = ${st})
     ORDER BY p.created_at DESC
   `;
   res.json(projects);
-}));
+});
 
 // GET /:id - get single project with line items and attachments
-router.get('/:id', wrap(async (req, res) => {
-  if (!await verifyProjectOwnership(req.params.id, req.userId!)) {
+router.get('/:id', async (req: AuthRequest, res) => {
+  if (!await verifyProjectOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
@@ -58,11 +69,11 @@ router.get('/:id', wrap(async (req, res) => {
   ]);
 
   res.json({ ...project[0], line_items: lineItems, attachments, contractors });
-}));
+});
 
 // POST /home/:homeId - create project
-router.post('/home/:homeId', wrap(async (req, res) => {
-  if (!await verifyHomeOwnership(req.params.homeId, req.userId!)) {
+router.post('/home/:homeId', async (req: AuthRequest, res) => {
+  if (!await verifyHomeOwnership(req.params.homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
   }
@@ -77,15 +88,15 @@ router.post('/home/:homeId', wrap(async (req, res) => {
 
   const [project] = await sql`
     INSERT INTO projects (home_id, room_id, category_id, name, description, status, year_created, estimated_cost, actual_cost)
-    VALUES (${req.params.homeId}, ${room_id || null}, ${category_id || null}, ${name.trim()}, ${description || null}, ${status || 'planned'}, ${year_created || null}, ${estimated_cost ?? 0}, ${actual_cost ?? 0})
+    VALUES (${req.params.homeId as string}, ${room_id || null}, ${category_id || null}, ${name.trim()}, ${description || null}, ${status || 'planned'}, ${year_created || null}, ${estimated_cost ?? 0}, ${actual_cost ?? 0})
     RETURNING *
   `;
   res.status(201).json(project);
-}));
+});
 
 // PUT /:id - update project
-router.put('/:id', wrap(async (req, res) => {
-  const existing = await verifyProjectOwnership(req.params.id, req.userId!);
+router.put('/:id', async (req: AuthRequest, res) => {
+  const existing = await verifyProjectOwnership(req.params.id as string, req.userId!);
   if (!existing) {
     res.status(404).json({ error: 'Project not found' });
     return;
@@ -110,11 +121,11 @@ router.put('/:id', wrap(async (req, res) => {
 
   const [project] = await sql`SELECT * FROM projects WHERE id = ${req.params.id}`;
   res.json(project);
-}));
+});
 
 // DELETE /:id - delete project
-router.delete('/:id', wrap(async (req, res) => {
-  if (!await verifyProjectOwnership(req.params.id, req.userId!)) {
+router.delete('/:id', async (req: AuthRequest, res) => {
+  if (!await verifyProjectOwnership(req.params.id as string, req.userId!)) {
     res.status(404).json({ error: 'Project not found' });
     return;
   }
@@ -122,6 +133,6 @@ router.delete('/:id', wrap(async (req, res) => {
   const sql = getDb();
   await sql`DELETE FROM projects WHERE id = ${req.params.id}`;
   res.json({ message: 'Project deleted' });
-}));
+});
 
 export default router;
