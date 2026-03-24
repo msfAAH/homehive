@@ -2,7 +2,12 @@ import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
-import { PDFParse, VerbosityLevel } from 'pdf-parse';
+// Lazy-loaded to avoid DOMMatrix crash in Node.js at import time
+let _pdfParseModule: typeof import('pdf-parse') | null = null;
+async function getPdfParse() {
+  if (!_pdfParseModule) _pdfParseModule = await import('pdf-parse');
+  return _pdfParseModule;
+}
 import { getDb } from '../db/connection.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
@@ -38,6 +43,7 @@ async function buildContentBlocks(attachments: any[]): Promise<ContentBlock[]> {
     } else if (mime === 'application/pdf' || att.stored_name?.toLowerCase().endsWith('.pdf')) {
       try {
         const buffer = fs.readFileSync(filePath);
+        const { PDFParse, VerbosityLevel } = await getPdfParse();
         const parser = new PDFParse({ data: new Uint8Array(buffer), verbosity: VerbosityLevel.ERRORS });
         const result = await parser.getText();
         const text = result.text?.slice(0, 8000) ?? '';
