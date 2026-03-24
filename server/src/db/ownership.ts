@@ -7,7 +7,7 @@ type Row = Record<string, any>;
 
 export async function verifyHomeOwnership(homeId: string | number, userId: number): Promise<boolean> {
   const sql = getDb();
-  const rows = await sql`SELECT id FROM homes WHERE id = ${homeId} AND user_id = ${userId}`;
+  const rows = await sql`SELECT id FROM homes WHERE id = ${Number(homeId)} AND user_id = ${userId}`;
   return rows.length > 0;
 }
 
@@ -19,7 +19,7 @@ export async function verifyRoomOwnership(roomId: string | number, userId: numbe
   const [row] = await sql`
     SELECT r.* FROM rooms r
     JOIN homes h ON r.home_id = h.id
-    WHERE r.id = ${roomId} AND h.user_id = ${userId}
+    WHERE r.id = ${Number(roomId)} AND h.user_id = ${userId}
   `;
   return row ?? null;
 }
@@ -31,7 +31,7 @@ export async function verifyProjectOwnership(projectId: string | number, userId:
   const [row] = await sql`
     SELECT p.* FROM projects p
     JOIN homes h ON p.home_id = h.id
-    WHERE p.id = ${projectId} AND h.user_id = ${userId}
+    WHERE p.id = ${Number(projectId)} AND h.user_id = ${userId}
   `;
   return row ?? null;
 }
@@ -45,7 +45,7 @@ export async function verifyItemOwnership(itemId: string | number, userId: numbe
     SELECT i.* FROM items i
     JOIN rooms r ON i.room_id = r.id
     JOIN homes h ON r.home_id = h.id
-    WHERE i.id = ${itemId} AND h.user_id = ${userId}
+    WHERE i.id = ${Number(itemId)} AND h.user_id = ${userId}
   `;
   return row ?? null;
 }
@@ -59,7 +59,7 @@ export async function verifyContractorOwnership(contractorId: string | number, u
     SELECT c.* FROM contractors c
     JOIN projects p ON c.project_id = p.id
     JOIN homes h ON p.home_id = h.id
-    WHERE c.id = ${contractorId} AND h.user_id = ${userId}
+    WHERE c.id = ${Number(contractorId)} AND h.user_id = ${userId}
   `;
   return row ?? null;
 }
@@ -73,7 +73,7 @@ export async function verifyLineItemOwnership(lineItemId: string | number, userI
     SELECT li.* FROM line_items li
     JOIN projects p ON li.project_id = p.id
     JOIN homes h ON p.home_id = h.id
-    WHERE li.id = ${lineItemId} AND h.user_id = ${userId}
+    WHERE li.id = ${Number(lineItemId)} AND h.user_id = ${userId}
   `;
   return row ?? null;
 }
@@ -84,7 +84,7 @@ export async function verifyLineItemOwnership(lineItemId: string | number, userI
 
 export async function verifyAttachmentOwnership(attachmentId: string | number, userId: number): Promise<Row | null> {
   const sql = getDb();
-  const [att] = await sql`SELECT * FROM attachments WHERE id = ${attachmentId}`;
+  const [att] = await sql`SELECT * FROM attachments WHERE id = ${Number(attachmentId)}`;
   if (!att) return null;
 
   if (att.home_id) {

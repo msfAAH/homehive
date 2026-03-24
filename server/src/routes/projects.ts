@@ -7,7 +7,7 @@ const router = Router();
 
 async function verifyHomeOwnership(homeId: string, userId: number): Promise<boolean> {
   const sql = getDb();
-  const rows = await sql`SELECT id FROM homes WHERE id = ${homeId} AND user_id = ${userId}`;
+  const rows = await sql`SELECT id FROM homes WHERE id = ${Number(homeId)} AND user_id = ${userId}`;
   return rows.length > 0;
 }
 
@@ -16,7 +16,7 @@ async function verifyProjectOwnership(projectId: string, userId: number): Promis
   const [row] = await sql`
     SELECT p.* FROM projects p
     JOIN homes h ON p.home_id = h.id
-    WHERE p.id = ${projectId} AND h.user_id = ${userId}
+    WHERE p.id = ${Number(projectId)} AND h.user_id = ${userId}
   `;
   return row ?? null;
 }

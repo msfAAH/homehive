@@ -12,7 +12,7 @@ async function verifyRoomOwnership(roomId: string, userId: number): Promise<bool
   const rows = await sql`
     SELECT r.id FROM rooms r
     JOIN homes h ON r.home_id = h.id
-    WHERE r.id = ${roomId} AND h.user_id = ${userId}
+    WHERE r.id = ${Number(roomId)} AND h.user_id = ${userId}
   `;
   return rows.length > 0;
 }
@@ -23,7 +23,7 @@ async function verifyItemOwnership(itemId: string, userId: number): Promise<any>
     SELECT i.* FROM items i
     JOIN rooms r ON i.room_id = r.id
     JOIN homes h ON r.home_id = h.id
-    WHERE i.id = ${itemId} AND h.user_id = ${userId}
+    WHERE i.id = ${Number(itemId)} AND h.user_id = ${userId}
   `;
   return row ?? null;
 }
@@ -37,8 +37,8 @@ router.get('/room/:roomId', async (req: AuthRequest, res) => {
 
   const sql = getDb();
   const [items, attachments] = await Promise.all([
-    sql`SELECT * FROM items WHERE room_id = ${req.params.roomId as string} ORDER BY name ASC`,
-    sql`SELECT * FROM attachments WHERE item_id IN (SELECT id FROM items WHERE room_id = ${req.params.roomId as string}) ORDER BY created_at ASC`,
+    sql`SELECT * FROM items WHERE room_id = ${Number(req.params.roomId)} ORDER BY name ASC`,
+    sql`SELECT * FROM attachments WHERE item_id IN (SELECT id FROM items WHERE room_id = ${Number(req.params.roomId)}) ORDER BY created_at ASC`,
   ]);
 
   const result = items.map((item: any) => ({
@@ -65,7 +65,7 @@ router.post('/room/:roomId', async (req: AuthRequest, res) => {
 
   const [item] = await sql`
     INSERT INTO items (room_id, name, category, brand, model, serial_number, purchase_date, purchase_price, warranty_expiry, notes)
-    VALUES (${req.params.roomId as string}, ${name.trim()}, ${category || null}, ${brand?.trim() || null}, ${model?.trim() || null}, ${serial_number?.trim() || null}, ${purchase_date || null}, ${purchase_price != null ? Number(purchase_price) : null}, ${warranty_expiry || null}, ${notes?.trim() || null})
+    VALUES (${Number(req.params.roomId)}, ${name.trim()}, ${category || null}, ${brand?.trim() || null}, ${model?.trim() || null}, ${serial_number?.trim() || null}, ${purchase_date || null}, ${purchase_price != null ? Number(purchase_price) : null}, ${warranty_expiry || null}, ${notes?.trim() || null})
     RETURNING *
   `;
   res.status(201).json({ ...item, attachments: [] });

@@ -7,7 +7,7 @@ const router = Router();
 
 async function verifyHomeOwnership(homeId: string, userId: number): Promise<boolean> {
   const sql = getDb();
-  const rows = await sql`SELECT id FROM homes WHERE id = ${homeId} AND user_id = ${userId}`;
+  const rows = await sql`SELECT id FROM homes WHERE id = ${Number(homeId)} AND user_id = ${userId}`;
   return rows.length > 0;
 }
 
@@ -16,7 +16,7 @@ async function verifyProjectOwnership(projectId: string, userId: number): Promis
   const rows = await sql`
     SELECT p.id FROM projects p
     JOIN homes h ON p.home_id = h.id
-    WHERE p.id = ${projectId} AND h.user_id = ${userId}
+    WHERE p.id = ${Number(projectId)} AND h.user_id = ${userId}
   `;
   return rows.length > 0;
 }
@@ -27,7 +27,7 @@ async function verifyContractorOwnership(contractorId: string, userId: number): 
     SELECT c.* FROM contractors c
     JOIN projects p ON c.project_id = p.id
     JOIN homes h ON p.home_id = h.id
-    WHERE c.id = ${contractorId} AND h.user_id = ${userId}
+    WHERE c.id = ${Number(contractorId)} AND h.user_id = ${userId}
   `;
   return row ?? null;
 }
@@ -58,7 +58,7 @@ router.get('/project/:projectId', wrap(async (req, res) => {
   }
 
   const sql = getDb();
-  const contractors = await sql`SELECT * FROM contractors WHERE project_id = ${req.params.projectId as string} ORDER BY created_at ASC`;
+  const contractors = await sql`SELECT * FROM contractors WHERE project_id = ${Number(req.params.projectId)} ORDER BY created_at ASC`;
   res.json(contractors);
 }));
 
@@ -79,7 +79,7 @@ router.post('/project/:projectId', wrap(async (req, res) => {
 
   const [contractor] = await sql`
     INSERT INTO contractors (project_id, company_name, contractor_type, contact_name, phone, email, website)
-    VALUES (${req.params.projectId as string}, ${company_name.trim()}, ${contractor_type?.trim() || null}, ${contact_name?.trim() || null}, ${phone?.trim() || null}, ${email?.trim() || null}, ${website?.trim() || null})
+    VALUES (${Number(req.params.projectId)}, ${company_name.trim()}, ${contractor_type?.trim() || null}, ${contact_name?.trim() || null}, ${phone?.trim() || null}, ${email?.trim() || null}, ${website?.trim() || null})
     RETURNING *
   `;
   res.status(201).json(contractor);

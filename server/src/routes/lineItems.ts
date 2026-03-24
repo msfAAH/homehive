@@ -6,10 +6,11 @@ const router = Router();
 
 async function recalculateProjectCost(projectId: string | number): Promise<void> {
   const sql = getDb();
+  const numId = Number(projectId);
   await sql`
     UPDATE projects SET actual_cost = (
-      SELECT COALESCE(SUM(total_cost), 0) FROM line_items WHERE project_id = ${projectId}
-    ) WHERE id = ${projectId}
+      SELECT COALESCE(SUM(total_cost), 0) FROM line_items WHERE project_id = ${numId}
+    ) WHERE id = ${numId}
   `;
 }
 
@@ -18,7 +19,7 @@ async function verifyProjectOwnership(projectId: string, userId: number): Promis
   const rows = await sql`
     SELECT p.id FROM projects p
     JOIN homes h ON p.home_id = h.id
-    WHERE p.id = ${projectId} AND h.user_id = ${userId}
+    WHERE p.id = ${Number(projectId)} AND h.user_id = ${userId}
   `;
   return rows.length > 0;
 }
@@ -29,7 +30,7 @@ async function verifyLineItemOwnership(lineItemId: string, userId: number): Prom
     SELECT li.* FROM line_items li
     JOIN projects p ON li.project_id = p.id
     JOIN homes h ON p.home_id = h.id
-    WHERE li.id = ${lineItemId} AND h.user_id = ${userId}
+    WHERE li.id = ${Number(lineItemId)} AND h.user_id = ${userId}
   `;
   return row ?? null;
 }
@@ -42,7 +43,7 @@ router.get('/project/:projectId', async (req: AuthRequest, res) => {
   }
 
   const sql = getDb();
-  const items = await sql`SELECT * FROM line_items WHERE project_id = ${req.params.projectId as string} ORDER BY created_at ASC`;
+  const items = await sql`SELECT * FROM line_items WHERE project_id = ${Number(req.params.projectId)} ORDER BY created_at ASC`;
   res.json(items);
 });
 
@@ -63,7 +64,7 @@ router.post('/project/:projectId', async (req: AuthRequest, res) => {
 
   const [item] = await sql`
     INSERT INTO line_items (project_id, description, quantity, unit_cost, vendor, notes)
-    VALUES (${req.params.projectId as string}, ${description.trim()}, ${quantity ?? 1}, ${unit_cost ?? 0}, ${vendor || null}, ${notes || null})
+    VALUES (${Number(req.params.projectId)}, ${description.trim()}, ${quantity ?? 1}, ${unit_cost ?? 0}, ${vendor || null}, ${notes || null})
     RETURNING *
   `;
 
