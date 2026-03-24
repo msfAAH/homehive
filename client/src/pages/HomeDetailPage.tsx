@@ -29,6 +29,7 @@ export default function HomeDetailPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [contractors, setContractors] = useState<(Contractor & { project_name: string; project_id: number })[]>([]);
   const [activeTab, setActiveTab] = useState<'rooms' | 'projects' | 'contractors'>('rooms');
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [showHomeDocs, setShowHomeDocs] = useState(false);
   const [showTaxHistory, setShowTaxHistory] = useState(false);
@@ -72,24 +73,29 @@ export default function HomeDetailPage() {
   const [projError, setProjError] = useState('');
 
   const fetchAll = async () => {
+    setFetchError(null);
     try {
       // Fetch the home first — if this fails, there's nothing to show.
       const homeData = await apiGet<Home>(`/homes/${id}`);
       setHome(homeData);
 
-      // Fetch secondary data in parallel; failures here don't hide the home.
+      // Fetch secondary data in parallel; collect errors but don't hide the home.
+      const errors: string[] = [];
       const [roomsData, projectsData, categoriesData, attachmentsData, contractorsData] = await Promise.all([
-        apiGet<Room[]>(`/rooms/home/${id}`).catch((e) => { console.error('Failed to load rooms:', e); return [] as Room[]; }),
-        apiGet<Project[]>(`/projects/home/${id}`).catch((e) => { console.error('Failed to load projects:', e); return [] as Project[]; }),
-        apiGet<Category[]>('/categories').catch((e) => { console.error('Failed to load categories:', e); return [] as Category[]; }),
-        apiGet<Attachment[]>(`/attachments?homeId=${id}`).catch((e) => { console.error('Failed to load attachments:', e); return [] as Attachment[]; }),
-        apiGet<(Contractor & { project_name: string; project_id: number })[]>(`/contractors/home/${id}`).catch((e) => { console.error('Failed to load contractors:', e); return [] as (Contractor & { project_name: string; project_id: number })[]; }),
+        apiGet<Room[]>(`/rooms/home/${id}`).catch((e) => { errors.push('rooms'); console.error('Failed to load rooms:', e); return [] as Room[]; }),
+        apiGet<Project[]>(`/projects/home/${id}`).catch((e) => { errors.push('projects'); console.error('Failed to load projects:', e); return [] as Project[]; }),
+        apiGet<Category[]>('/categories').catch((e) => { errors.push('categories'); console.error('Failed to load categories:', e); return [] as Category[]; }),
+        apiGet<Attachment[]>(`/attachments?homeId=${id}`).catch((e) => { errors.push('attachments'); console.error('Failed to load attachments:', e); return [] as Attachment[]; }),
+        apiGet<(Contractor & { project_name: string; project_id: number })[]>(`/contractors/home/${id}`).catch((e) => { errors.push('contractors'); console.error('Failed to load contractors:', e); return [] as (Contractor & { project_name: string; project_id: number })[]; }),
       ]);
       setRooms(roomsData);
       setProjects(projectsData);
       setCategories(categoriesData);
       setAttachments(attachmentsData);
       setContractors(contractorsData);
+      if (errors.length > 0) {
+        setFetchError(`Failed to load: ${errors.join(', ')}. Try refreshing.`);
+      }
     } catch (err) {
       console.error('Failed to load home details:', err);
     } finally {
@@ -205,6 +211,11 @@ export default function HomeDetailPage() {
 
   return (
     <div>
+      {fetchError && (
+        <div className="mb-4 rounded-lg bg-danger/10 px-4 py-3 text-sm text-danger">
+          {fetchError}
+        </div>
+      )}
       {/* Home Profile */}
       <div className="mb-6">
         {home.cover_photo && (

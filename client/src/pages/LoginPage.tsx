@@ -105,9 +105,9 @@ export default function LoginPage() {
               <div className="flex justify-center">
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
-                  onError={() => setError('Google login failed')}
+                  onError={() => setError('Google sign-in failed. Please try again.')}
                   size="large"
-                  width="100%"
+                  width={320}
                   text="signin_with"
                 />
               </div>

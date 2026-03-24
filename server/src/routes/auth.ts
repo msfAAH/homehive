@@ -129,8 +129,15 @@ router.post('/google', wrap(async (req, res) => {
       },
     });
   } catch (err: unknown) {
-    console.error('Google auth error:', err);
-    res.status(401).json({ error: 'Google authentication failed' });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('Google auth error:', msg);
+    if (msg.includes('audience') || msg.includes('client_id')) {
+      res.status(401).json({ error: 'Google token audience mismatch — check GOOGLE_CLIENT_ID' });
+    } else if (msg.includes('expired') || msg.includes('Token used too late')) {
+      res.status(401).json({ error: 'Google token expired — please try again' });
+    } else {
+      res.status(401).json({ error: `Google authentication failed: ${msg}` });
+    }
   }
 }));
 

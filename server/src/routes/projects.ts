@@ -29,6 +29,7 @@ router.get('/home/:homeId', wrap(async (req, res) => {
   }
 
   const sql = getDb();
+  const homeId = Number(req.params.homeId);
   const { roomId, categoryId, status } = req.query;
   const rId = roomId ? Number(roomId) : null;
   const cId = categoryId ? Number(categoryId) : null;
@@ -39,10 +40,10 @@ router.get('/home/:homeId', wrap(async (req, res) => {
     FROM projects p
     LEFT JOIN rooms r ON p.room_id = r.id
     LEFT JOIN project_categories pc ON p.category_id = pc.id
-    WHERE p.home_id = ${req.params.homeId as string}
-      AND (${rId} IS NULL OR p.room_id = ${rId})
-      AND (${cId} IS NULL OR p.category_id = ${cId})
-      AND (${st} IS NULL OR p.status = ${st})
+    WHERE p.home_id = ${homeId}
+      AND (${rId === null} OR p.room_id = ${rId})
+      AND (${cId === null} OR p.category_id = ${cId})
+      AND (${st === null} OR p.status = ${st})
     ORDER BY p.created_at DESC
   `;
   res.json(projects);
@@ -74,6 +75,7 @@ router.get('/:id', wrap(async (req, res) => {
 
 // POST /home/:homeId - create project
 router.post('/home/:homeId', wrap(async (req, res) => {
+  const homeId = Number(req.params.homeId);
   if (!await verifyHomeOwnership(req.params.homeId as string, req.userId!)) {
     res.status(404).json({ error: 'Home not found' });
     return;
@@ -89,7 +91,7 @@ router.post('/home/:homeId', wrap(async (req, res) => {
 
   const [project] = await sql`
     INSERT INTO projects (home_id, room_id, category_id, name, description, status, year_created, estimated_cost, actual_cost)
-    VALUES (${req.params.homeId as string}, ${room_id || null}, ${category_id || null}, ${name.trim()}, ${description || null}, ${status || 'planned'}, ${year_created || null}, ${estimated_cost ?? 0}, ${actual_cost ?? 0})
+    VALUES (${homeId}, ${room_id || null}, ${category_id || null}, ${name.trim()}, ${description || null}, ${status || 'planned'}, ${year_created || null}, ${estimated_cost ?? 0}, ${actual_cost ?? 0})
     RETURNING *
   `;
   res.status(201).json(project);

@@ -50,9 +50,18 @@ export default function HomeForm({ home, onSave, onCancel }: HomeFormProps) {
       }
 
       if (pendingPhoto) {
-        const formData = new FormData();
-        formData.append('photo', pendingPhoto, 'cover.jpg');
-        await apiUpload(`/homes/${savedId}/cover-photo`, formData);
+        try {
+          const formData = new FormData();
+          formData.append('photo', pendingPhoto, 'cover.jpg');
+          await apiUpload(`/homes/${savedId}/cover-photo`, formData);
+        } catch (uploadErr) {
+          // Home was saved but photo failed — still call onSave so the home data refreshes,
+          // but show the error so the user knows the photo didn't upload.
+          setError(uploadErr instanceof Error ? `Home saved, but photo upload failed: ${uploadErr.message}` : 'Photo upload failed');
+          setSaving(false);
+          onSave();
+          return;
+        }
       }
 
       onSave();

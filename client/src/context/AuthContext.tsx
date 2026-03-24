@@ -98,14 +98,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [handleAuthResponse]);
 
   const googleLogin = useCallback(async (credential: string) => {
-    const res = await fetch(`${API_URL}/api/auth/google`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential }),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/api/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      });
+    } catch (err) {
+      throw new Error('Unable to reach the server. Please check your connection and try again.');
+    }
     if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || 'Google login failed');
+      let errorMsg = 'Google login failed';
+      try {
+        const data = await res.json();
+        errorMsg = data.error || errorMsg;
+      } catch { /* response wasn't JSON */ }
+      throw new Error(errorMsg);
     }
     const data = await res.json();
     handleAuthResponse(data);

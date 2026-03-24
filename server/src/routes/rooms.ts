@@ -29,12 +29,13 @@ router.get('/home/:homeId', wrap(async (req, res) => {
   }
 
   const sql = getDb();
+  const homeId = Number(req.params.homeId);
   const rooms = await sql`
     SELECT r.*,
       (SELECT COUNT(*) FROM projects WHERE room_id = r.id) AS project_count,
       (SELECT COUNT(*) FROM items WHERE room_id = r.id) AS item_count
     FROM rooms r
-    WHERE r.home_id = ${req.params.homeId as string}
+    WHERE r.home_id = ${homeId}
     ORDER BY r.name ASC
   `;
   res.json(rooms);
@@ -76,7 +77,7 @@ router.post('/home/:homeId', wrap(async (req, res) => {
 
   const [newRoom] = await sql`
     INSERT INTO rooms (home_id, name, icon, floor, notes)
-    VALUES (${req.params.homeId as string}, ${name.trim()}, ${icon || null}, ${floor || null}, ${notes || null})
+    VALUES (${Number(req.params.homeId)}, ${name.trim()}, ${icon || null}, ${floor || null}, ${notes || null})
     RETURNING *
   `;
   res.status(201).json(newRoom);

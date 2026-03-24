@@ -28,12 +28,13 @@ router.get('/', wrap(async (req, res) => {
 // GET /:id - get single home (must belong to user)
 router.get('/:id', wrap(async (req, res) => {
   const sql = getDb();
+  const homeId = Number(req.params.id);
   const [home] = await sql`
     SELECT h.*,
       (SELECT COUNT(*) FROM rooms WHERE home_id = h.id) AS room_count,
       (SELECT COUNT(*) FROM projects WHERE home_id = h.id) AS project_count
     FROM homes h
-    WHERE h.id = ${req.params.id} AND h.user_id = ${req.userId}
+    WHERE h.id = ${homeId} AND h.user_id = ${req.userId}
   `;
 
   if (!home) {

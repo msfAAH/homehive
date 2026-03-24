@@ -44,7 +44,7 @@ router.get('/home/:homeId', wrap(async (req, res) => {
     SELECT c.*, p.name AS project_name, p.id AS project_id
     FROM contractors c
     JOIN projects p ON c.project_id = p.id
-    WHERE p.home_id = ${req.params.homeId as string}
+    WHERE p.home_id = ${Number(req.params.homeId)}
     ORDER BY p.name ASC, c.company_name ASC
   `;
   res.json(contractors);
