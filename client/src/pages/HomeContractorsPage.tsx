@@ -122,7 +122,7 @@ export default function HomeContractorsPage() {
     </select>
   );
 
-  const editForm = (
+  const editForm = (contractorId: number) => (
     <div className="flex flex-col gap-2">
       <div className="grid grid-cols-2 gap-2">
         {field('company_name', 'Company name')}
@@ -132,13 +132,16 @@ export default function HomeContractorsPage() {
         {field('email', 'Email', 'email')}
         {field('website', 'Website (https://...)', 'url')}
       </div>
-      <div className="flex gap-2">
-        <Button size="sm" onClick={save} disabled={saving || !editData.company_name.trim()}>
-          {saving ? '...' : 'Save'}
-        </Button>
-        <Button size="sm" variant="secondary" onClick={cancel}>
-          Cancel
-        </Button>
+      <div className="flex justify-between">
+        <div className="flex gap-2">
+          <Button size="sm" onClick={save} disabled={saving || !editData.company_name.trim()}>
+            {saving ? '...' : 'Save'}
+          </Button>
+          <Button size="sm" variant="secondary" onClick={cancel}>
+            Cancel
+          </Button>
+        </div>
+        <Button size="sm" variant="danger" onClick={() => { cancel(); handleDelete(contractorId); }}>Remove</Button>
       </div>
     </div>
   );
@@ -178,7 +181,7 @@ export default function HomeContractorsPage() {
                 {group.map((c) =>
                   editingId === c.id ? (
                     <div key={c.id} className="rounded-xl border border-border bg-surface p-4">
-                      {editForm}
+                      {editForm(c.id)}
                     </div>
                   ) : (
                     <div key={c.id} className="rounded-xl border border-border bg-surface p-4">
@@ -218,12 +221,9 @@ export default function HomeContractorsPage() {
                             )}
                           </div>
                         </div>
-                        <div className="flex shrink-0 gap-1">
+                        <div className="flex shrink-0">
                           <Button size="sm" variant="secondary" onClick={() => startEdit(c)} disabled={editingId !== null}>
                             Edit
-                          </Button>
-                          <Button size="sm" variant="danger" onClick={() => handleDelete(c.id)} disabled={editingId !== null}>
-                            Remove
                           </Button>
                         </div>
                       </div>

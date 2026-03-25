@@ -643,11 +643,14 @@ export default function HomeDetailPage() {
                               <input className="w-full rounded border border-border px-2 py-1 text-sm" type="email" placeholder="Email" value={contractorEditData.email} onChange={(e) => setContractorEditData({ ...contractorEditData, email: e.target.value })} />
                               <input className="w-full rounded border border-border px-2 py-1 text-sm" type="url" placeholder="Website (https://...)" value={contractorEditData.website} onChange={(e) => setContractorEditData({ ...contractorEditData, website: e.target.value })} />
                             </div>
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={saveContractorEdit} disabled={contractorSaving || !contractorEditData.company_name.trim()}>
-                                {contractorSaving ? '...' : 'Save'}
-                              </Button>
-                              <Button size="sm" variant="secondary" onClick={cancelContractorEdit}>Cancel</Button>
+                            <div className="flex justify-between">
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={saveContractorEdit} disabled={contractorSaving || !contractorEditData.company_name.trim()}>
+                                  {contractorSaving ? '...' : 'Save'}
+                                </Button>
+                                <Button size="sm" variant="secondary" onClick={cancelContractorEdit}>Cancel</Button>
+                              </div>
+                              <Button size="sm" variant="danger" onClick={() => { cancelContractorEdit(); handleDeleteContractor(c.id); }}>Remove</Button>
                             </div>
                           </div>
                         </div>
@@ -676,9 +679,8 @@ export default function HomeDetailPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex shrink-0 gap-1">
+                            <div className="flex shrink-0">
                               <Button size="sm" variant="secondary" onClick={() => startContractorEdit(c)} disabled={contractorEditId !== null}>Edit</Button>
-                              <Button size="sm" variant="danger" onClick={() => handleDeleteContractor(c.id)} disabled={contractorEditId !== null}>Remove</Button>
                             </div>
                           </div>
                         </div>

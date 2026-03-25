@@ -121,13 +121,20 @@ export default function ContractorTable({ projectId, contractors, onUpdate }: Co
         {field('email', 'Email', 'email')}
         {field('website', 'Website (https://...)', 'url')}
       </div>
-      <div className="flex gap-2">
-        <Button size="sm" onClick={save} disabled={saving || !editData.company_name.trim()}>
-          {saving ? '...' : 'Save'}
-        </Button>
-        <Button size="sm" variant="secondary" onClick={cancel}>
-          Cancel
-        </Button>
+      <div className="flex justify-between">
+        <div className="flex gap-2">
+          <Button size="sm" onClick={save} disabled={saving || !editData.company_name.trim()}>
+            {saving ? '...' : 'Save'}
+          </Button>
+          <Button size="sm" variant="secondary" onClick={cancel}>
+            Cancel
+          </Button>
+        </div>
+        {editingId !== 'new' && (
+          <Button size="sm" variant="danger" onClick={() => { const id = editingId as number; cancel(); handleDelete(id); }}>
+            Remove
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -174,12 +181,9 @@ export default function ContractorTable({ projectId, contractors, onUpdate }: Co
                       )}
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-1">
+                  <div className="flex shrink-0">
                     <Button size="sm" variant="secondary" onClick={() => startEdit(c)} disabled={editingId !== null}>
                       Edit
-                    </Button>
-                    <Button size="sm" variant="danger" onClick={() => handleDelete(c.id)} disabled={editingId !== null}>
-                      Remove
                     </Button>
                   </div>
                 </div>
