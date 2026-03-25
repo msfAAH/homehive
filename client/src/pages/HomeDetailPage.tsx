@@ -12,9 +12,33 @@ import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import AttachmentGrid from '../components/attachments/AttachmentGrid';
 import AttachmentUpload from '../components/attachments/AttachmentUpload';
-import { apiGet, apiPost, apiDelete, uploadsUrl } from '../api/client';
+import { apiGet, apiPost, apiPut, apiDelete, uploadsUrl } from '../api/client';
 import { StatusBadge, formatCost } from '../components/projects/ProjectStatus';
 import type { Home, Room, Project, Category, Attachment, Contractor } from '../types';
+
+const CONTRACTOR_TYPES = [
+  'Roofing', 'Electrical', 'Plumbing', 'HVAC', 'GC', 'Carpentry',
+  'Landscaping', 'Solar', 'Design', 'Architecture', 'Engineering',
+  'Painting', 'Mason',
+];
+
+interface ContractorEditRow {
+  company_name: string;
+  contractor_type: string;
+  contact_name: string;
+  phone: string;
+  email: string;
+  website: string;
+}
+
+const emptyContractorRow: ContractorEditRow = {
+  company_name: '',
+  contractor_type: '',
+  contact_name: '',
+  phone: '',
+  email: '',
+  website: '',
+};
 
 export default function HomeDetailPage() {
   const { homeId } = useParams<{ homeId: string }>();
@@ -30,6 +54,9 @@ export default function HomeDetailPage() {
   const [contractors, setContractors] = useState<(Contractor & { project_name: string; project_id: number })[]>([]);
   const [activeTab, setActiveTab] = useState<'rooms' | 'projects' | 'contractors'>('rooms');
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [contractorEditId, setContractorEditId] = useState<number | null>(null);
+  const [contractorEditData, setContractorEditData] = useState<ContractorEditRow>(emptyContractorRow);
+  const [contractorSaving, setContractorSaving] = useState(false);
 
   const [showHomeDocs, setShowHomeDocs] = useState(false);
   const [showTaxHistory, setShowTaxHistory] = useState(false);
@@ -135,6 +162,50 @@ export default function HomeDetailPage() {
     } catch (err) {
       console.error('Failed to delete attachment:', err);
     }
+  };
+
+  const startContractorEdit = (c: Contractor) => {
+    setContractorEditId(c.id);
+    setContractorEditData({
+      company_name: c.company_name,
+      contractor_type: c.contractor_type ?? '',
+      contact_name: c.contact_name ?? '',
+      phone: c.phone ?? '',
+      email: c.email ?? '',
+      website: c.website ?? '',
+    });
+  };
+
+  const cancelContractorEdit = () => {
+    setContractorEditId(null);
+    setContractorEditData(emptyContractorRow);
+  };
+
+  const saveContractorEdit = async () => {
+    if (!contractorEditData.company_name.trim() || contractorEditId === null) return;
+    setContractorSaving(true);
+    try {
+      await apiPut(`/contractors/${contractorEditId}`, {
+        company_name: contractorEditData.company_name.trim(),
+        contractor_type: contractorEditData.contractor_type || null,
+        contact_name: contractorEditData.contact_name.trim() || null,
+        phone: contractorEditData.phone.trim() || null,
+        email: contractorEditData.email.trim() || null,
+        website: contractorEditData.website.trim() || null,
+      });
+      setContractorEditId(null);
+      setContractorEditData(emptyContractorRow);
+      fetchAll();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setContractorSaving(false);
+    }
+  };
+
+  const handleDeleteContractor = (contractorId: number) => {
+    if (!window.confirm('Remove this contractor?')) return;
+    apiDelete(`/contractors/${contractorId}`).then(fetchAll).catch(console.error);
   };
 
   const resetProjectForm = () => {
@@ -557,34 +628,62 @@ export default function HomeDetailPage() {
                     {projectName}
                   </Link>
                   <div className="flex flex-col gap-3">
-                    {group.map((c) => (
-                      <div key={c.id} className="rounded-xl border border-border bg-surface p-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-text">{c.company_name}</span>
-                              {c.contractor_type && (
-                                <span className="rounded bg-surface-dark px-2 py-0.5 text-xs font-medium text-text-muted">
-                                  {c.contractor_type}
-                                </span>
-                              )}
+                    {group.map((c) =>
+                      contractorEditId === c.id ? (
+                        <div key={c.id} className="rounded-xl border border-border bg-surface p-4">
+                          <div className="flex flex-col gap-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Company name" value={contractorEditData.company_name} onChange={(e) => setContractorEditData({ ...contractorEditData, company_name: e.target.value })} />
+                              <select className="w-full rounded border border-border px-2 py-1 text-sm bg-warm-white text-text" value={contractorEditData.contractor_type} onChange={(e) => setContractorEditData({ ...contractorEditData, contractor_type: e.target.value })}>
+                                <option value="">Type (optional)</option>
+                                {CONTRACTOR_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                              <input className="w-full rounded border border-border px-2 py-1 text-sm" placeholder="Main contact" value={contractorEditData.contact_name} onChange={(e) => setContractorEditData({ ...contractorEditData, contact_name: e.target.value })} />
+                              <input className="w-full rounded border border-border px-2 py-1 text-sm" type="tel" placeholder="Phone" value={contractorEditData.phone} onChange={(e) => setContractorEditData({ ...contractorEditData, phone: e.target.value })} />
+                              <input className="w-full rounded border border-border px-2 py-1 text-sm" type="email" placeholder="Email" value={contractorEditData.email} onChange={(e) => setContractorEditData({ ...contractorEditData, email: e.target.value })} />
+                              <input className="w-full rounded border border-border px-2 py-1 text-sm" type="url" placeholder="Website (https://...)" value={contractorEditData.website} onChange={(e) => setContractorEditData({ ...contractorEditData, website: e.target.value })} />
                             </div>
-                            {c.contact_name && (
-                              <span className="text-sm text-text-muted">{c.contact_name}</span>
-                            )}
-                            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-text-muted">
-                              {c.phone && <a href={`tel:${c.phone}`} className="hover:text-primary">{c.phone}</a>}
-                              {c.email && <a href={`mailto:${c.email}`} className="hover:text-primary">{c.email}</a>}
-                              {c.website && (
-                                <a href={c.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
-                                  {c.website}
-                                </a>
-                              )}
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={saveContractorEdit} disabled={contractorSaving || !contractorEditData.company_name.trim()}>
+                                {contractorSaving ? '...' : 'Save'}
+                              </Button>
+                              <Button size="sm" variant="secondary" onClick={cancelContractorEdit}>Cancel</Button>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ) : (
+                        <div key={c.id} className="rounded-xl border border-border bg-surface p-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex flex-col gap-0.5">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-text">{c.company_name}</span>
+                                {c.contractor_type && (
+                                  <span className="rounded bg-surface-dark px-2 py-0.5 text-xs font-medium text-text-muted">
+                                    {c.contractor_type}
+                                  </span>
+                                )}
+                              </div>
+                              {c.contact_name && (
+                                <span className="text-sm text-text-muted">{c.contact_name}</span>
+                              )}
+                              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-sm text-text-muted">
+                                {c.phone && <a href={`tel:${c.phone}`} className="hover:text-primary">{c.phone}</a>}
+                                {c.email && <a href={`mailto:${c.email}`} className="hover:text-primary">{c.email}</a>}
+                                {c.website && (
+                                  <a href={c.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+                                    {c.website}
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex shrink-0 gap-1">
+                              <Button size="sm" variant="secondary" onClick={() => startContractorEdit(c)} disabled={contractorEditId !== null}>Edit</Button>
+                              <Button size="sm" variant="danger" onClick={() => handleDeleteContractor(c.id)} disabled={contractorEditId !== null}>Remove</Button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               ))}
